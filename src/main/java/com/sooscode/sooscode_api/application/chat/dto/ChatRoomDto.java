@@ -1,4 +1,4 @@
-package com.sooscode.sooscode_api.application.chatting.dto;
+package com.sooscode.sooscode_api.application.chat.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
