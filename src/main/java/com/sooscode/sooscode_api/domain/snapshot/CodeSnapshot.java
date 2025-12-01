@@ -1,4 +1,5 @@
-package com.sooscode.sooscode_api.domain.chat.entity;
+package com.sooscode.sooscode_api.domain.snapshot;
+
 
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
@@ -9,29 +10,30 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_message")
+@Table(name = "code_snapshot")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ChatMessage {
+public class CodeSnapshot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_id")
-    private Long chatId;
+    @Column(name = "code_snapshot_id")
+    private Long codeSnapshotId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = true)
-    @com.fasterxml.jackson.annotation.JsonIgnore   // ✅ 이거 추가
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JoinColumn(name = "class_id")
     private ClassRoom classRoom;
 
-    @Column(name = "content", columnDefinition = "LONGTEXT", nullable = false)
+    @Column(name = "title", length = 255)
+    private String title;
+
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
     @CreationTimestamp
