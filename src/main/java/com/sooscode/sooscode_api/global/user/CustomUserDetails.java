@@ -4,10 +4,15 @@ import com.sooscode.sooscode_api.domain.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 스프링 시큐리티가 사용하는 사용자 정보 포맷
+ * 시큐리티는 USer entity 그대로 사용 X -> UserDetails로 감싸야 함
+ * USer entity를 기반으로 인증 가능한 정보 제공
+ * 컨트롤러에서 로그인 정보 확인할 때 @AuthenticationPrincipal CustomUserDetails userDetails 로 사용
+ */
 public class CustomUserDetails implements UserDetails {
 
     private final User user;

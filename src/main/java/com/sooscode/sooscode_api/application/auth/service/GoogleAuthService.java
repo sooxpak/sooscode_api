@@ -37,7 +37,7 @@ public class GoogleAuthService {
     public LoginResponse processGoogleCallback(String code) {
 
         GoogleOAuthToken tokenResponse = getAccessToken(code);
-        GoogleUserInfo userInfo = getUserInfo(tokenResponse.access_token());
+        GoogleUserInfo userInfo = getUserInfo(tokenResponse.accessToken());
 
         String email = userInfo.email();
 

@@ -5,6 +5,13 @@ import com.sooscode.sooscode_api.domain.user.entity.User;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+    /**
+     * 이메일로 사용자 조회 (로그인/인증 시 사용)
+     */
     Optional<User> findByEmail(String email);
+
+    /**
+     * 이메일 존재 여부 확인 (회원가입 중복 검사)
+     */
     boolean existsByEmail(String email);
 }
