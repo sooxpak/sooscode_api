@@ -61,6 +61,7 @@ public class ClassParticipantServiceImpl implements ClassParticipantService{
     @Override
     public void deleteParticipant(Long classId, Long userId) {
         log.info("Deleting participant from class {} and user {}", classId, userId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -73,6 +74,7 @@ public class ClassParticipantServiceImpl implements ClassParticipantService{
                 .orElseThrow(() -> new CustomException(ErrorCode.PARTICIPANT_NOT_FOUND));
 
         classParticipantRepository.delete(participant);
+
         log.info("Deleted participant from class {} and user {}", classRoom.getClassId(), user.getUserId());
     }
 }

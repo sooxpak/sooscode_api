@@ -108,10 +108,10 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 //                .build();
 //    }
 
-//
-//    /**
-//     * 모든 클래스 조회
-//     */
+
+    /**
+     * 모든 클래스 조회
+     */
 //    public List<ClassRoomResponse> getAllClasses() {
 //        return classRoomRepository.findAll().stream()
 //                .map(ClassRoomResponse::from)
