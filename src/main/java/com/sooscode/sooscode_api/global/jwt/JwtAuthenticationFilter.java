@@ -9,15 +9,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
+/**
+ * JWT 기반 인증의 핵심 로직 (커스텀 필터)
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,8 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // 쿠키에서 AT 꺼냄
         String token = null;
-
         if (request.getCookies() != null) {
             token = Arrays.stream(request.getCookies())
                     .filter(c -> c.getName().equals("accessToken"))
@@ -41,10 +41,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(null);
         }
 
+        // JWT 유효성 검증
         if (token != null && jwtUtil.validateToken(token)) {
-
+            // 유효하면 토큰에서 email 추출
             String email = jwtUtil.getUsernameFromToken(token);
 
+            // DB에서 유저 로드 -> userDetails 생성
             CustomUserDetails userDetails =
                     (CustomUserDetails) customUserDetailsService.loadUserByUsername(email);
 
@@ -55,6 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails.getAuthorities()
                     );
 
+            // SecurityContextHolder에 인증 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

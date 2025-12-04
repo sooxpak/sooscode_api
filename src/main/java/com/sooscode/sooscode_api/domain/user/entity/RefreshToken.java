@@ -16,14 +16,15 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RefreshToken {
     @Id
-    private String token_value;
+    @Column(name = "token_value")
+    private String tokenValue;
 
-    @Column(nullable = false)
-    private Long user_id;
+    @Column(nullable = false, name = "user_id")
+    private Long userId;
 
     @Column(nullable = false)
     private LocalDate expiration;
 
-    @Column(nullable = false)
-    private LocalDate created_at;
+    @Column(nullable = false, name="created_at")
+    private LocalDate createdAt;
 }

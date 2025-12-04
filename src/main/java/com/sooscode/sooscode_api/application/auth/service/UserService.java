@@ -1,6 +1,5 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
-
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

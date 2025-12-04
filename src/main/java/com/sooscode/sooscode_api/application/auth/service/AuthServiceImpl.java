@@ -1,23 +1,25 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
+import com.sooscode.sooscode_api.application.auth.dto.*;
 import com.sooscode.sooscode_api.domain.user.entity.EmailCode;
+import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
 import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
+import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
 import com.sooscode.sooscode_api.global.exception.ErrorCode;
+import com.sooscode.sooscode_api.global.jwt.JwtUtil;
+import com.sooscode.sooscode_api.global.user.CustomUserDetails;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.sooscode.sooscode_api.application.auth.dto.*;
-import com.sooscode.sooscode_api.application.auth.dto.RegisterRequest;
-import com.sooscode.sooscode_api.domain.user.entity.User;
-import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
-import com.sooscode.sooscode_api.global.jwt.JwtUtil;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -31,29 +33,41 @@ public class AuthServiceImpl {
     private final JwtUtil jwtUtil;
     private final UserService userService;
     private final EmailCodeRepository emailCodeRepository;
-
     private final JavaMailSender mailSender;
 
-    // 로그인
-    public LoginResponse loginUser(LoginRequest loginRequest) {
+    /**
+     * 로그인 - 인증 및 JWT 토큰 생성
+     */
+    public LoginResponse authenticateAndGenerateTokens(
+            LoginRequest request,
+            AuthenticationManager authenticationManager
+    ) {/**
+         * 스프링 시큐리티를 통한 인증
+         */
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-        User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일 입니다."));
+        /**
+         * 인증된 사용자 정보 추출
+         */CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
 
-        if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
-        }
-
+        /**
+         * JWT 토큰 생성
+         */
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return new LoginResponse(
-                accessToken,
-                refreshToken
-        );
+        return new LoginResponse(accessToken, refreshToken);
     }
 
-    // 회원가입
+    /**
+     * 회원가입
+     */
     public RegisterResponse registerUser(RegisterRequest request) {
 
         if (userService.existsByEmail(request.getEmail())) {
@@ -68,7 +82,6 @@ public class AuthServiceImpl {
         user.setRole(UserRole.STUDENT);
         user.setStatus(UserStatus.ACTIVE);
 
-        // DB 저장
         User newUser = userService.saveUser(user);
 
         return new RegisterResponse(
@@ -79,12 +92,16 @@ public class AuthServiceImpl {
         );
     }
 
-    // 이메일 중복 확인
-    public boolean isDuplicateEmail(String email) {
+    /**
+     * 이메일 중복 확인
+     */
+     public boolean isDuplicateEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    // 이메일 인증코드 발송
+    /**
+     * 이메일 인증 코드 발송
+     */
     public void sendVerificationCode(String email) {
         String code = generateCode();
 
@@ -96,11 +113,12 @@ public class AuthServiceImpl {
 
         emailCodeRepository.save(emailCode);
 
-        // 이메일 보내기
         sendEmail(email, code);
     }
 
-    // 인증 코드 검증
+    /**
+     * 인증 코드 검증
+     */
     public boolean verifyEmailCode(String email, String code) {
         EmailCode emailCode = emailCodeRepository
                 .findTopByEmailOrderByCreatedAtDesc(email)
@@ -120,12 +138,16 @@ public class AuthServiceImpl {
         return isMatch;
     }
 
-    // 6자리 코드 랜덤 생성
+    /**
+     * 6자리 코드 랜덤 발송
+     */
     private String generateCode(){
         return String.format("%06d", new Random().nextInt(999999));
     }
 
-    // 이메일 전송
+    /**
+     * 이메일 전송
+     */
     private void sendEmail(String to, String code) {
 
         try {
@@ -216,7 +238,7 @@ public class AuthServiceImpl {
                           이메일 인증을 완료해주세요.
                       </p>
                       <div class="code-box">
-                          <span class="code">"" + code + ""</span>
+                           <span class="code">%s</span>
                       </div>
                       <p class="info">
                           · 본 인증코드는 발급 시점으로부터 <b>5분간만 유효</b>합니다.<br/>
@@ -228,9 +250,9 @@ public class AuthServiceImpl {
                   </div>
               </body>
               </html>
-              """;
+              """.formatted(code);
 
-            helper.setText(htmlContent, true); // ← true = HTML 사용
+            helper.setText(htmlContent, true);
 
             mailSender.send(message);
 
@@ -238,5 +260,4 @@ public class AuthServiceImpl {
             throw new RuntimeException("이메일 전송 중 오류 발생", e);
         }
     }
-
 }

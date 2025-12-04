@@ -1,12 +1,13 @@
-package com.sooscode.sooscode_api.application.auth.dto;
+package com.sooscode.sooscode_api.application.userProfile.dto;
 
 import com.sooscode.sooscode_api.domain.user.enums.UserRole;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
-public class RegisterResponse {
+@NoArgsConstructor
+public class UserInfo {
     private Long userId;
     private String email;
     private String name;
