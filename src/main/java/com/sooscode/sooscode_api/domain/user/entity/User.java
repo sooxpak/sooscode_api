@@ -37,12 +37,23 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(updatable = false, insertable = false)
+    @Column(updatable = false, nullable = false)
     private LocalDateTime created_at;
 
-    @Column(insertable = false)
+    @Column(nullable = false)
     private LocalDateTime updated_at;
 
     private String file;
+
+    @PrePersist
+    protected void onCreate() {
+        this.created_at = LocalDateTime.now();
+        this.updated_at = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updated_at = LocalDateTime.now();
+    }
 }
 
