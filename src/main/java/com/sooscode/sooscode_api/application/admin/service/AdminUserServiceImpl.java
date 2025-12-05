@@ -3,6 +3,7 @@ package com.sooscode.sooscode_api.application.admin.service;
 import com.sooscode.sooscode_api.application.admin.dto.AdminUserRequest;
 import com.sooscode.sooscode_api.application.admin.dto.AdminUserResponse;
 import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.domain.user.enums.AuthProvider;
 import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
@@ -46,7 +47,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .email(request.getEmail())
                 .password(encodedPassword)
                 .name(request.getName())
-                .provider("LOCAL") // 관리자가 생성한 계정은 로컬 계정
+                .provider(AuthProvider.LOCAL) // 관리자가 생성한 계정은 로컬 계정
                 .role(UserRole.INSTRUCTOR)
                 .status(UserStatus.ACTIVE) // 생성 시 활성 상태
                 .build();
