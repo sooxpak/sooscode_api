@@ -26,6 +26,9 @@ public class ClassRoom {
     @Column(name = "is_online", nullable = false)
     private boolean isOnline;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive;
+
     @Column(name = "title", length = 255, nullable = false)
     private String title;
 

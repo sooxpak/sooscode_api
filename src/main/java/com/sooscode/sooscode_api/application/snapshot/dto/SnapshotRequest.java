@@ -7,13 +7,12 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
-public class SnapshotSaveRequest {
+
+public class SnapshotRequest {
     private Long userId;
     private Long classId;
     private String title;
     private String content;
-    private LocalDateTime createdAt;
-
-
+    private LocalDateTime updatedAt;
 
 }

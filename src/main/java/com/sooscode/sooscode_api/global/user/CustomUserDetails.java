@@ -1,6 +1,7 @@
 package com.sooscode.sooscode_api.global.user;
 
 import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,9 @@ public class CustomUserDetails implements UserDetails {
 
     private final User user;
 
-    // 일반 로그인/OAuth 공통 생성자
+    /**
+     * 일반 로그인/OAuth 공통 생성자
+     */
     public CustomUserDetails(User user) {
         this.user = user;
     }
@@ -29,7 +32,9 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        // OAuth 로그인 사용자(password = null) 대비
+        /**
+         * OAuth 로그인 사용자 (password = null) 대비
+         */
         return user.getPassword() != null ? user.getPassword() : "";
     }
 
@@ -55,11 +60,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // 유저 상태 조건에 따라 변경 가능 (ACTIVE 여부 체크 가능)
-        return true;
+        return user.getStatus() == UserStatus.ACTIVE;
     }
 
-    // User 엔티티 접근용
+    /**
+     * User entity 접근용
+     */
     public User getUser() {
         return user;
     }

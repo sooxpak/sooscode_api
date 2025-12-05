@@ -1,27 +1,27 @@
 package com.sooscode.sooscode_api.application.classroom.service;
 
 import com.sooscode.sooscode_api.application.classroom.dto.*;
+import com.sooscode.sooscode_api.domain.classroom.entity.ClassAssignment;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassParticipant;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
 import com.sooscode.sooscode_api.domain.classroom.enums.ClassMode;
 import com.sooscode.sooscode_api.domain.classroom.enums.ClassStatus;
+import com.sooscode.sooscode_api.domain.classroom.repository.ClassAssignmentRepository;
 import com.sooscode.sooscode_api.domain.classroom.repository.ClassParticipantRepository;
 import com.sooscode.sooscode_api.domain.classroom.repository.ClassRoomRepository;
 import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.file.repository.SooFileRepository;
-import com.sooscode.sooscode_api.domain.snapshot.entity.CodeSnapshot;
 import com.sooscode.sooscode_api.domain.snapshot.repository.CodeSnapshotRepository;
+import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
-import com.sooscode.sooscode_api.global.exception.ErrorCode;
+import com.sooscode.sooscode_api.global.exception.errorcode.ClassErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,6 +32,8 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     private final SooFileRepository sooFileRepository;
     private final ClassParticipantRepository classParticipantRepository;
     private final CodeSnapshotRepository codeSnapshotRepository;
+    private final UserRepository userRepository;
+    private final ClassAssignmentRepository classAssignmentRepository;
 
     /**
      * Class의 정보를 조회
@@ -39,7 +41,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     @Override
     public ClassRoomResponse.Detail getClassDetail(Long classId) {
         ClassRoom classRoom = classRoomRepository.findById(classId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
 
         return ClassRoomResponse.Detail.from(classRoom);
     }
@@ -66,6 +68,20 @@ public class ClassRoomServiceImpl implements ClassRoomService {
                 .build();
 
         return classRoomRepository.save(classRoom);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherClassResponse> getClassesByTeacher(Long userId) {
+
+        log.info("getClassesByTeacher Service");
+
+        List<ClassAssignment> assignments =
+                classAssignmentRepository.findByUser_UserId(userId);
+
+        return assignments.stream()
+                .map(TeacherClassResponse::from)
+                .toList();
     }
 
 //    @Override
@@ -108,10 +124,10 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 //                .build();
 //    }
 
-//
-//    /**
-//     * 모든 클래스 조회
-//     */
+
+    /**
+     * 모든 클래스 조회
+     */
 //    public List<ClassRoomResponse> getAllClasses() {
 //        return classRoomRepository.findAll().stream()
 //                .map(ClassRoomResponse::from)

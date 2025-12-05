@@ -4,8 +4,8 @@ import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
-import com.sooscode.sooscode_api.global.exception.ErrorCode;
-import com.sooscode.sooscode_api.infra.file.S3FileService;
+import com.sooscode.sooscode_api.global.exception.errorcode.UserErrorCode;
+import com.sooscode.sooscode_api.infra.file.service.S3FileService;
 import jakarta.persistence.EntityManager;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class TestServiceImpl {
 
         // 1. 유저 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.NOT_FOUND));
 
         // CASE 1: 새 프로필 이미지 업로드
         if (photo != null && !photo.isEmpty()) {

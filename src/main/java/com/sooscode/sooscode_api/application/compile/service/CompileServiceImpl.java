@@ -3,7 +3,7 @@ package com.sooscode.sooscode_api.application.compile.service;
 import com.sooscode.sooscode_api.application.compile.dto.CompileResultResponse;
 import com.sooscode.sooscode_api.application.compile.dto.CompileRunResponse;
 import com.sooscode.sooscode_api.global.exception.CustomException;
-import com.sooscode.sooscode_api.global.exception.ErrorCode;
+import com.sooscode.sooscode_api.global.exception.errorcode.CompileErrorCode;
 import com.sooscode.sooscode_api.infra.worker.CodeBlacklistFilter;
 import com.sooscode.sooscode_api.infra.worker.CompileWorkerClient;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class CompileServiceImpl implements CompileService {
         String jobId = runResponse.getJobId();
 
         if (jobId == null || jobId.isBlank()) {
-            throw new CustomException(ErrorCode.CODE_SERVER_CONNECTION_FAILED);
+            throw new CustomException(CompileErrorCode.NOT_FOUND);
         }
         /**
          * [3] 워커 서버 결과 polling
