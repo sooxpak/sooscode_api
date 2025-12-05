@@ -32,8 +32,9 @@ public class CompileServiceImpl implements CompileService {
         String jobId = runResponse.getJobId();
 
         if (jobId == null || jobId.isBlank()) {
-            throw new CustomException(CompileErrorCode.NOT_FOUND);
+            throw new CustomException(CompileErrorCode.WORKER_ERROR);
         }
+
         /**
          * [3] 워커 서버 결과 polling
          * - 워커 서버의 비동기 작업이 완료될 때까지 상태를 반복 조회한다.
@@ -44,15 +45,22 @@ public class CompileServiceImpl implements CompileService {
             CompileResultResponse result = compileWorkerClient.getCompileResult(jobId);
 
             if (!"PENDING".equals(result.getStatus())) {
-                return result; // SUCCESS 또는 FAIL
-            }
 
+                if ("COMPILE_ERROR".equals(result.getStatus())){
+                    throw new CustomException(CompileErrorCode.COMPILE_FAILED);
+                }
+                if ("RUN_ERROR".equals(result.getStatus())){
+                    throw new CustomException(CompileErrorCode.RUNTIME_ERROR);
+                }
+                return result;
+            }
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
             }
         }
+
         /**
          * [4] Timeout 처리
          * - 제한 시간(15초) 동안 작업이 완료되지 않으면 TIMEOUT 상태를 반환한다.
