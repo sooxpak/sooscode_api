@@ -2,6 +2,7 @@ package com.sooscode.sooscode_api.application.classroom.service;
 
 import com.sooscode.sooscode_api.application.classroom.dto.ClassAssignmentRequest;
 import com.sooscode.sooscode_api.application.classroom.dto.ClassAssignmentResponse;
+import com.sooscode.sooscode_api.application.classroom.dto.TeacherListItemResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface ClassAssignmentService {
     void addClassAssignment(ClassAssignmentRequest rq);
     ClassAssignmentResponse getClassAssignment(Long classId);
     void deleteClassAssignment(Long classId);
+    List<TeacherListItemResponse> getAssignmentTeachers();
 }

@@ -1,11 +1,10 @@
 package com.sooscode.sooscode_api.application.classroom.service;
 
 //import com.sooscode.sooscode_api.application.classroom.dto.ClassDetailResponse;
-import com.sooscode.sooscode_api.application.classroom.dto.ClassParticipantResponse;
-import com.sooscode.sooscode_api.application.classroom.dto.ClassRoomCreateRequest;
-import com.sooscode.sooscode_api.application.classroom.dto.ClassRoomResponse;
-import com.sooscode.sooscode_api.application.classroom.dto.TeacherClassResponse;
+import com.sooscode.sooscode_api.application.classroom.dto.*;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +17,9 @@ public interface ClassRoomService {
     ClassRoom createClassRoom(ClassRoomCreateRequest request);
 
     List<TeacherClassResponse> getClassesByTeacher(Long userId);
+
+    // 유저가 가지고 있는 클래스 목록
+    Page<MyClassResponse> getMyClasses(Long userId, Pageable pageable);
     // 강사 ClassRoom 진입시 getData
     //ClassDetailResponse getTeacherClassDetail(Long classId);
 

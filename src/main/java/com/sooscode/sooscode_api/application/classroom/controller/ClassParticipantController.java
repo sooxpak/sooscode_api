@@ -49,5 +49,7 @@ public class ClassParticipantController {
 
         return ResponseEntity.ok("delete participant successfully");
     }
+
+
 }
 

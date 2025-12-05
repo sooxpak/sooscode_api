@@ -2,6 +2,7 @@ package com.sooscode.sooscode_api.application.classroom.service;
 
 import com.sooscode.sooscode_api.application.classroom.dto.ClassAssignmentRequest;
 import com.sooscode.sooscode_api.application.classroom.dto.ClassAssignmentResponse;
+import com.sooscode.sooscode_api.application.classroom.dto.TeacherListItemResponse;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassAssignment;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
 import com.sooscode.sooscode_api.domain.classroom.repository.ClassAssignmentRepository;
@@ -16,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,14 +36,14 @@ public class ClassAssignmentServiceImpl implements ClassAssignmentService {
         log.info("addClassAssignment Service 실행");
 
         if (classAssignmentRepository.existsByClassRoom_ClassId(rq.getClassId())) {
-            throw new CustomException(ClassErrorCode.NOT_FOUND);
+            throw new CustomException(ClassErrorCode.ASSIGNMENT_NOT_FOUND);
         }
 
         User user = userRepository.findById(rq.getUserId())
                 .orElseThrow(() -> new CustomException(UserErrorCode.NOT_FOUND));
 
         ClassRoom classRoom = classRoomRepository.findById(rq.getClassId())
-                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.ASSIGNMENT_NOT_FOUND));
 
         ClassAssignment assignment = ClassAssignment.builder()
                 .user(user)
@@ -55,7 +58,7 @@ public class ClassAssignmentServiceImpl implements ClassAssignmentService {
         log.info("getClassAssignment Service");
 
         ClassAssignment assignment = classAssignmentRepository.findByClassRoom_ClassId(classId)
-                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.ASSIGNMENT_NOT_FOUND));
 
         return ClassAssignmentResponse.from(assignment);
     }
@@ -65,8 +68,28 @@ public class ClassAssignmentServiceImpl implements ClassAssignmentService {
         log.info("deleteClassAssignment Service");
 
         ClassAssignment assignment = classAssignmentRepository.findByClassRoom_ClassId(classId)
-                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.ASSIGNMENT_NOT_FOUND));
 
         classAssignmentRepository.delete(assignment);
+    }
+
+    @Override
+    public List<TeacherListItemResponse> getAssignmentTeachers() {
+
+        // 전체 Assignment를 가져와서 assigns에 담음
+        List<ClassAssignment> assigns = classAssignmentRepository.findAll();
+
+        Map<Long, User> userMap = new HashMap<>();
+
+        // assign 전체를 순회하면서 assign의 User객체를 뽑아서 중복 제거후 userMap에 put
+        for (ClassAssignment a : assigns) {
+            User u = a.getUser();
+            userMap.putIfAbsent(u.getUserId(), u);
+        }
+
+        //  TeacherListItemResponse를 List로 담아서 반환
+        return userMap.values().stream()
+                .map(TeacherListItemResponse::from)
+                .toList();
     }
 }

@@ -2,13 +2,21 @@ package com.sooscode.sooscode_api.application.classroom.controller;
 
 import com.sooscode.sooscode_api.application.classroom.dto.ClassRoomCreateRequest;
 import com.sooscode.sooscode_api.application.classroom.dto.ClassRoomResponse;
+import com.sooscode.sooscode_api.application.classroom.dto.MyClassResponse;
 import com.sooscode.sooscode_api.application.classroom.service.ClassRoomService;
 import com.sooscode.sooscode_api.application.snapshot.service.SnapshotService;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
+import com.sooscode.sooscode_api.global.user.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/classroom")
@@ -39,19 +47,6 @@ public class ClassRoomController {
         return ResponseEntity.ok(saved);
     }
 
-    // 추후 Snapshot Service 작업 후 작성 예정
-//    @GetMapping("/{classId}/snapshot/{userId}")
-//    public ResponseEntity<?> getUserSnapshot(
-//            @PathVariable Long classId,
-//            @PathVariable Long userId
-//    ) {
-//        log.info("getUserSnapshot Method");
-//
-//        var snapshot = snapshotService.getUserSnapshot(userId, classId);
-//
-//        return ResponseEntity.ok(snapshot);
-//    }
-
     // 해당 강사가 담당하는 클래스 정보
     @GetMapping("/teacher/{userId}")
     public ResponseEntity<?> getClassesByTeacher(@PathVariable Long userId) {
@@ -62,6 +57,25 @@ public class ClassRoomController {
 
         return ResponseEntity.ok(response);
     }
+
+    // 내가 현재 가지고있는 강의 조회 ( 학생입장에서 제목,썸네일,담당강사 )
+    @GetMapping("/me/classes")
+    public ResponseEntity<?> getMyClasses(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Long userId = userDetails.getUser().getUserId();
+
+        log.info("getMyClasses Controller userId={}, page={}, size={}", userId, page, size);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<MyClassResponse> response = classRoomService.getMyClasses(userId, pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
 
 
 }

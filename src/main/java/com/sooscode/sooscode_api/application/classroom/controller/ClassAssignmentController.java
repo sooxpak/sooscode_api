@@ -52,4 +52,14 @@ public class ClassAssignmentController {
         return ResponseEntity.ok(response);
     }
 
+    // 수업에 담당된 모든 강사 조회 ( 중복제거 )
+    @GetMapping("/assignment/teachers")
+    public ResponseEntity<?> getClassAssignmentTeachers() {
+
+        log.info("getClassAssignmentTeachers");
+
+        var response = classAssignmentService.getAssignmentTeachers();
+
+        return ResponseEntity.ok(response);
+    }
 }

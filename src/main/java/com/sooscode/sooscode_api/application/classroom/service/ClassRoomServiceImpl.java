@@ -18,6 +18,8 @@ import com.sooscode.sooscode_api.global.exception.CustomException;
 import com.sooscode.sooscode_api.global.exception.errorcode.ClassErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +43,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     @Override
     public ClassRoomResponse.Detail getClassDetail(Long classId) {
         ClassRoom classRoom = classRoomRepository.findById(classId)
-                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.CLASS_NOT_FOUND));
 
         return ClassRoomResponse.Detail.from(classRoom);
     }
@@ -83,6 +85,18 @@ public class ClassRoomServiceImpl implements ClassRoomService {
                 .map(TeacherClassResponse::from)
                 .toList();
     }
+
+    @Override
+    public Page<MyClassResponse> getMyClasses(Long userId, Pageable pageable) {
+
+        log.info("getMyClasses Service");
+
+        return classParticipantRepository.findMyClasses(userId, pageable);
+    }
+
+
+
+
 
 //    @Override
 //    public ClassDetailResponse getTeacherClassDetail(Long classId, LocalDate date) {
