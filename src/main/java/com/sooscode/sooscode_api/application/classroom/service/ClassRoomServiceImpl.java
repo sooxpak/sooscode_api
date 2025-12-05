@@ -15,10 +15,13 @@ import com.sooscode.sooscode_api.domain.snapshot.repository.CodeSnapshotReposito
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
+import com.sooscode.sooscode_api.global.exception.errorcode.ClassErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -38,7 +41,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     @Override
     public ClassRoomResponse.Detail getClassDetail(Long classId) {
         ClassRoom classRoom = classRoomRepository.findById(classId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
 
         return ClassRoomResponse.Detail.from(classRoom);
     }

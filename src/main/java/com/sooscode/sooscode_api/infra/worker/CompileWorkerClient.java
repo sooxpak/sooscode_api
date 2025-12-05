@@ -3,6 +3,7 @@ package com.sooscode.sooscode_api.infra.worker;
 import com.sooscode.sooscode_api.application.compile.dto.CompileResultResponse;
 import com.sooscode.sooscode_api.application.compile.dto.CompileRunResponse;
 import com.sooscode.sooscode_api.global.exception.CustomException;
+import com.sooscode.sooscode_api.global.exception.errorcode.CompileErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +41,7 @@ public class CompileWorkerClient {
             return response.getBody();
         } catch (Exception e) {
             log.error("워커 서버 통신 실패: {}", e.getMessage());
-            throw new CustomException(ErrorCode.CODE_SERVER_CONNECTION_FAILED);
+            throw new CustomException(CompileErrorCode.NOT_FOUND);
         }
     }
     /**
@@ -53,7 +54,7 @@ public class CompileWorkerClient {
             return restTemplate.getForObject(targetUrl, CompileResultResponse.class);
         } catch (Exception e) {
             log.error("결과 조회 실패: {}", e.getMessage());
-            throw new CustomException(ErrorCode.CODE_SERVER_CONNECTION_FAILED);
+            throw new CustomException(CompileErrorCode.NOT_FOUND);
         }
     }
     /**

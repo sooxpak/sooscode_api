@@ -8,6 +8,8 @@ import com.sooscode.sooscode_api.domain.classroom.repository.ClassRoomRepository
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
+import com.sooscode.sooscode_api.global.exception.errorcode.ClassErrorCode;
+import com.sooscode.sooscode_api.global.exception.errorcode.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,7 @@ public class ClassParticipantServiceImpl implements ClassParticipantService{
                 classParticipantRepository.findByClassRoom_ClassId(classId);
 
         if (participants.isEmpty()) {
-            throw new CustomException(ErrorCode.CLASS_NOT_FOUND);
+            throw new CustomException(ClassErrorCode.NOT_FOUND);
         }
 
         return participants.stream()
@@ -44,10 +46,10 @@ public class ClassParticipantServiceImpl implements ClassParticipantService{
         log.info("Adding participant to class {} and user {}", classId, userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.NOT_FOUND));
 
         ClassRoom classRoom = classRoomRepository.findById(classId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
 
         ClassParticipant classParticipant = ClassParticipant.builder()
                 .user(user)
@@ -62,15 +64,15 @@ public class ClassParticipantServiceImpl implements ClassParticipantService{
         log.info("Deleting participant from class {} and user {}", classId, userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.NOT_FOUND));
 
         ClassRoom classRoom = classRoomRepository.findById(classId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
 
         // 3. 참가자 조회 (classId + userId)
         ClassParticipant participant = classParticipantRepository
                 .findByClassRoom_ClassIdAndUser_UserId(classRoom.getClassId(), user.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.PARTICIPANT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ClassErrorCode.NOT_FOUND));
 
         classParticipantRepository.delete(participant);
 

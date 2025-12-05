@@ -10,6 +10,9 @@ import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
 import com.sooscode.sooscode_api.domain.user.repository.TempCredentialRepository;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
+import com.sooscode.sooscode_api.global.exception.errorcode.AuthErrorCode;
+import com.sooscode.sooscode_api.global.exception.errorcode.UserErrorCode;
+import com.sooscode.sooscode_api.global.exception.errorcode.ValidErrorCode;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
 import com.sooscode.sooscode_api.global.user.CustomUserDetails;
 import jakarta.mail.internet.MimeMessage;
@@ -79,40 +82,40 @@ public class AuthServiceImpl {
         if (request.getEmail() == null ||
                 request.getEmail().length() < 5 ||
                 request.getEmail().length() > 100) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "이메일은 5~100자여야 합니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "이메일은 5~100자여야 합니다.");
         }
 
         // 이메일 형식 체크
         if (!request.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "이메일 형식이 올바르지 않습니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "이메일 형식이 올바르지 않습니다.");
         }
 
         // 비밀번호 길이 체크
         if (request.getPassword() == null ||
                 request.getPassword().length() < 8 ||
                 request.getPassword().length() > 20) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "비밀번호는 8~20자여야 합니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "비밀번호는 8~20자여야 합니다.");
         }
 
         // 비밀번호 일치 확인
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "비밀번호가 일치하지 않습니다.");
         }
 
         // 이름 길이 체크
         if (request.getName() == null ||
                 request.getName().length() < 2 ||
                 request.getName().length() > 20) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "이름은 2~20자여야 합니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "이름은 2~20자여야 합니다.");
         }
 
         // 이메일 인증 여부 검사
         EmailCode emailCode = emailCodeRepository
                 .findTopByEmailOrderByEmailCodeIdDesc(request.getEmail())
-                .orElseThrow(() -> new CustomException(ErrorCode.VALIDATION_FAILED, "이메일 인증을 먼저 진행해주세요."));
+                .orElseThrow(() -> new CustomException(ValidErrorCode.VALIDATION_FAILED, "이메일 인증을 먼저 진행해주세요."));
 
         if (!emailCode.getIsVerified()) {
-            throw new CustomException(ErrorCode.VALIDATION_FAILED, "이메일 인증이 완료되지 않았습니다.");
+            throw new CustomException(ValidErrorCode.VALIDATION_FAILED, "이메일 인증이 완료되지 않았습니다.");
         }
     }
 
@@ -125,7 +128,7 @@ public class AuthServiceImpl {
         validateRegisterRequest(request);
 
         if (userService.existsByEmail(request.getEmail())) {
-            throw new CustomException(ErrorCode.AUTH_DUPLICATE_EMAIL);
+            throw new CustomException(AuthErrorCode.DUPLICATE_EMAIL);
         }
 
         User user = new User();
