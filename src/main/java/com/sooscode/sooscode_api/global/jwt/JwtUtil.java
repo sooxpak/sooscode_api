@@ -71,7 +71,6 @@ public class JwtUtil {
                 .getBody();
     }
 
-
     //   VALIDATION
     /** 서명 및 만료 체크 */
     public boolean validateToken(String token) {

@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.sooscode.sooscode_api.global.utils.UserValidator.validateEmail;
+import static com.sooscode.sooscode_api.global.utils.UserValidator.validateUsername;
+
 
 @Slf4j
 @RestController
@@ -29,6 +32,8 @@ public class AdminUserController {
     public ResponseEntity<AdminUserResponse.InstructorCreated> createInstructor(
             @Valid @RequestBody AdminUserRequest.CreateInstructor request
     ) {
+        validateUsername(request.getName());
+        validateEmail(request.getEmail());
         log.info("관리자 강사 계정 생성 요청: email={}", request.getEmail());
         AdminUserResponse.InstructorCreated response = adminUserService.createInstructor(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
