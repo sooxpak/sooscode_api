@@ -27,12 +27,13 @@ public class CompileWorkerClient {
     /**
      * [POST] 워커에게 실행 요청
      */
-    public CompileRunResponse requestCompile(String code) {
-
+    public CompileRunResponse requestCompile(String jobId, String code, String callbackUrl) {
 
         String targetUrl = workerUrl + "/api/compile/run";
 
         Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("callbackUrl", callbackUrl);
+        requestBody.put("jobId", jobId);
         requestBody.put("code", code);
 
         try {
@@ -41,19 +42,6 @@ public class CompileWorkerClient {
             return response.getBody();
         } catch (Exception e) {
             log.error("워커 서버 통신 실패: {}", e.getMessage());
-            throw new CustomException(CompileErrorCode.NOT_FOUND);
-        }
-    }
-    /**
-     * [GET] 워커에게 결과 조회
-     */
-    public CompileResultResponse getCompileResult(String jobId) {
-        String targetUrl = workerUrl + "/api/compile/result/" + jobId;
-
-        try {
-            return restTemplate.getForObject(targetUrl, CompileResultResponse.class);
-        } catch (Exception e) {
-            log.error("결과 조회 실패: {}", e.getMessage());
             throw new CustomException(CompileErrorCode.NOT_FOUND);
         }
     }
