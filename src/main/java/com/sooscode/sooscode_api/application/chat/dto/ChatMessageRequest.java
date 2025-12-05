@@ -8,10 +8,9 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Setter
-public class ChatSaveRequest {
-    private Long chatId;
-    private Long userId;
+public class ChatMessageRequest {
     private Long classId;
+    private Long userId;
     private String content;
     private LocalDateTime createdAt;
 

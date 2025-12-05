@@ -7,18 +7,16 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class ChatHistoryResponse {
-    private Long chatId;
-    private Long userId;
+public class ChatMessageResponse {
     private Long classId;
+    private Long userId;
     private String content;
     private LocalDateTime createdAt;
 
-    public static ChatHistoryResponse from(ChatMessage message) {
-        return new ChatHistoryResponse(
-                message.getChatId(),
-                message.getUser() != null ? message.getUser().getUserId() : null,
+    public static ChatMessageResponse from(ChatMessage message) {
+        return new ChatMessageResponse(
                 message.getClassRoom().getClassId(),
+                message.getUser() != null ? message.getUser().getUserId() : null,
                 message.getContent(),
                 message.getCreatedAt()
         );
