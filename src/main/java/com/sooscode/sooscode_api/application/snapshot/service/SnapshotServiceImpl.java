@@ -40,7 +40,6 @@ public class SnapshotServiceImpl implements SnapshotService {
         ClassRoom classRoom = classRoomRepository.findById(rq.getClassId())
                 .orElseThrow(() -> new CustomException(ClassErrorCode.CLASS_NOT_FOUND));
 
-
         CodeSnapshot codeSnapshot = CodeSnapshot.builder()
                 .user(user)
                 .classRoom(classRoom)
