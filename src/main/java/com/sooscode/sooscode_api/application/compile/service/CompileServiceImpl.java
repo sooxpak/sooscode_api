@@ -21,7 +21,7 @@ public class CompileServiceImpl implements CompileService {
     private final CompileWorkerClient compileWorkerClient;
     private final CompileFutureStore compileFutureStore;
 
-    @Value("${compile.backend-url}")
+    @Value("${app.urls.backend}")
     private String backendUrl;
 
     @Override

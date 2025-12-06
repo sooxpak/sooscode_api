@@ -21,7 +21,7 @@ public class CompileWorkerClient {
 
     private final RestTemplate restTemplate = createRestTemplate();
 
-    @Value("${compile.worker-url}")
+    @Value("${app.urls.worker}")
     private String workerUrl;
 
     /**
