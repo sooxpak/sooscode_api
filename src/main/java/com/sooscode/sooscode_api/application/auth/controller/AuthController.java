@@ -1,5 +1,6 @@
 package com.sooscode.sooscode_api.application.auth.controller;
 
+import com.sooscode.sooscode_api.application.auth.service.GoogleAuthService;
 import com.sooscode.sooscode_api.application.auth.util.CookieUtil;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.global.exception.CustomException;
@@ -17,6 +18,8 @@ import com.sooscode.sooscode_api.application.auth.dto.*;
 import com.sooscode.sooscode_api.application.auth.service.AuthServiceImpl;
 import com.sooscode.sooscode_api.application.auth.dto.RegisterRequest;
 
+import java.net.URI;
+
 import static com.sooscode.sooscode_api.global.utils.UserValidator.validateSignupData;
 
 @RestController
@@ -27,6 +30,7 @@ public class AuthController {
     private final AuthServiceImpl authService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final GoogleAuthService googleAuthService;
 
     /**
      * 로컬 로그인
@@ -122,28 +126,36 @@ public class AuthController {
         );
     }
 
-//    // Google 로그인 URL로 redirect
-//    @GetMapping("/google/login")
-//    public void googleLogin(HttpServletResponse response) throws Exception {
-//        String url = googleAuthService.buildGoogleLoginUrl();
-//        response.sendRedirect(url);
-//    }
-//
-//    // Google OAuth Callback
-//    @GetMapping("/google/callback")
-//    public ResponseEntity<?> googleCallback(
-//            @RequestParam("code") String code,
-//            HttpServletResponse response
-//    ) {
-//
-//        LoginResponse data = authService.loginUser(code);
-//
-//        CookieUtil.addTokenCookies(response, data);
-//
-//        return ResponseEntity.status(HttpStatus.FOUND)
-//                .location(URI.create("http://localhost:5173"))
-//                .build();
-//    }
+    // Google 로그인 URL로 redirect
+    @GetMapping("/google/login")
+    public void googleLogin(HttpServletResponse response) throws Exception {
+        String url = googleAuthService.buildGoogleLoginUrl();
+        response.sendRedirect(url);
+    }
+
+    /**
+     * Google OAuth Callback
+     */
+    @GetMapping("/google/callback")
+    public ResponseEntity<?> googleCallback(
+            @RequestParam("code") String code,
+            HttpServletResponse response
+    ) {
+
+        // 소셜 로그인 후 토큰 + 유저 정보 받기
+        GoogleLoginResponse data = authService.loginUserResponse(code);
+
+        // 토큰을 쿠키에 저장
+        CookieUtil.addTokenCookies(
+                response,
+                new TokenResponse(data.accessToken(), data.refreshToken())
+        );
+
+        // Body 없이 redirect
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("http://localhost:5173"))
+                .build();
+    }
 
 
     /**

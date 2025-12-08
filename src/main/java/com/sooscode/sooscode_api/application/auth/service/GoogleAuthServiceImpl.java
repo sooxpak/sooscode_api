@@ -1,109 +1,136 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
-import com.sooscode.sooscode_api.domain.user.enums.AuthProvider;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sooscode.sooscode_api.application.auth.dto.GoogleOAuthTokenDto;
+import com.sooscode.sooscode_api.application.auth.dto.GoogleUserDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import com.sooscode.sooscode_api.application.auth.dto.*;
-import com.sooscode.sooscode_api.global.oauth.GoogleOAuthConfig;
-import com.sooscode.sooscode_api.global.jwt.JwtUtil;
-import com.sooscode.sooscode_api.domain.user.entity.User;
-import com.sooscode.sooscode_api.domain.user.enums.UserRole;
-import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
-import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
+import org.springframework.http.*;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleAuthServiceImpl implements GoogleAuthService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final GoogleOAuthConfig googleOAuthConfig;
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /** 필요한 3개만 @Value로 받음 */
+    @Value("${oauth.google.client-id}")
+    private String clientId;
+
+    @Value("${oauth.google.client-secret}")
+    private String clientSecret;
+
+    @Value("${oauth.google.redirect-uri}")
+    private String redirectUri;
+
+    /** URL은 고정 사용 */
+    private static final String AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+    private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
+    private static final String USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+
 
     /**
-     * Google 로그인 URL 생성
+     * 구글 로그인 URL 생성
      */
+    @Override
     public String buildGoogleLoginUrl() {
-        return "https://accounts.google.com/o/oauth2/v2/auth" +
-                "?client_id=" + googleOAuthConfig.getClientId() +
-                "&redirect_uri=" + googleOAuthConfig.getRedirectUri() +
-                "&response_type=code" +
-                "&scope=openid%20email%20profile" +
-                "&access_type=offline";
+
+        String encodedRedirectUri = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
+
+        return AUTH_URL
+                + "?client_id=" + clientId
+                + "&redirect_uri=" + encodedRedirectUri
+                + "&response_type=code"
+                + "&scope=" + URLEncoder.encode("openid email profile", StandardCharsets.UTF_8)
+                + "&access_type=offline"
+                + "&prompt=consent";
     }
 
-    /**
-     *
-     * Google Callback 처리 (AccessToken + RefreshToken 발급)
-     */
-    public TokenResponse processGoogleCallback(String code) {
-
-        GoogleOAuthTokenDto tokenResponse = getAccessToken(code);
-        GoogleUserDto userInfo = getUserInfo(tokenResponse.accessToken());
-
-        String email = userInfo.email();
-
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(createGoogleUser(userInfo)));
-
-        String accessToken = jwtUtil.generateAccessToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
-
-        return new TokenResponse(accessToken, refreshToken);
-    }
 
     /**
-     * code → oauth token
+     * Authorization Code → Access Token 요청
      */
-    private GoogleOAuthTokenDto getAccessToken(String code) {
-
-        String url = "https://oauth2.googleapis.com/token";
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("code", code);
-        params.add("client_id", googleOAuthConfig.getClientId());
-        params.add("client_secret", googleOAuthConfig.getClientSecret());
-        params.add("redirect_uri", googleOAuthConfig.getRedirectUri());
-        params.add("grant_type", "authorization_code");
+    @Override
+    public GoogleOAuthTokenDto getAccessToken(String code) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpEntity<?> request = new HttpEntity<>(params, headers);
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("code", code);
+        params.add("client_id", clientId);
+        params.add("client_secret", clientSecret);
+        params.add("redirect_uri", redirectUri);
+        params.add("grant_type", "authorization_code");
 
-        return restTemplate.postForObject(url, request, GoogleOAuthTokenDto.class);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(TOKEN_URL, request, String.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("[Google] Access Token 요청 실패: " + response.getStatusCode());
+        }
+
+        try {
+            JsonNode json = objectMapper.readTree(response.getBody());
+
+            return new GoogleOAuthTokenDto(
+                    json.get("access_token").asText(),
+                    json.get("expires_in").asText(),
+                    json.get("scope").asText(),
+                    json.get("token_type").asText(),
+                    json.has("id_token") ? json.get("id_token").asText() : null
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("[Google] Token 응답 파싱 실패", e);
+        }
     }
 
+
     /**
-     * access-token → user info
+     * Access Token → Google 사용자 정보 조회
      */
-    private GoogleUserDto getUserInfo(String accessToken) {
-        String url = "https://www.googleapis.com/oauth2/v2/userinfo";
+    @Override
+    public GoogleUserDto getUserInfo(String accessToken) {
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
+        headers.set("Authorization", "Bearer " + accessToken);
 
-        HttpEntity<?> request = new HttpEntity<>(headers);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        return restTemplate.exchange(url, HttpMethod.GET, request, GoogleUserDto.class)
-            .getBody();
-    }
+        ResponseEntity<String> response =
+                restTemplate.exchange(USERINFO_URL, HttpMethod.GET, request, String.class);
 
-    /**
-     * 신규 유저 생성
-     */
-    private User createGoogleUser(GoogleUserDto info) {
-        User newUser = new User();
-        newUser.setEmail(info.email());
-        newUser.setPassword("GOOGLE_USER");
-        newUser.setName(info.name());
-        newUser.setProvider(AuthProvider.GOOGLE);
-        newUser.setRole(UserRole.STUDENT);
-        newUser.setStatus(UserStatus.ACTIVE);
-        return newUser;
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("[Google] UserInfo 요청 실패: " + response.getStatusCode());
+        }
+
+        try {
+            JsonNode json = objectMapper.readTree(response.getBody());
+
+            return new GoogleUserDto(
+                    json.get("email").asText(),
+                    json.get("name").asText(),
+                    json.get("picture").asText()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("[Google] UserInfo 파싱 실패", e);
+        }
     }
 }

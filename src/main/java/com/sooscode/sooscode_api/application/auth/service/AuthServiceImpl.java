@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 import static com.sooscode.sooscode_api.global.exception.errorcode.AuthErrorCode.ERROR_WHILE_EMAIL_SENDING;
 
@@ -42,6 +43,7 @@ public class AuthServiceImpl implements AuthService{
     private final EmailCodeRepository emailCodeRepository;
     private final JavaMailSender mailSender;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final GoogleAuthService googleAuthService;
 
     /**
      * 로그인 - 인증 및 JWT 토큰 생성
@@ -462,4 +464,58 @@ public class AuthServiceImpl implements AuthService{
 //
 //        return new LoginResponse(accessToken, refreshToken);
 //    }
+
+    /**
+     * 구글 로그인 유저 정보 얻기
+     */
+    @Override
+    public GoogleLoginResponse loginUserResponse(String code) {
+
+        // 1. 구글 access_token 요청
+        GoogleOAuthTokenDto tokenResponse = googleAuthService.getAccessToken(code);
+
+        // 2. 구글 사용자 정보 조회
+        GoogleUserDto googleUser = googleAuthService.getUserInfo(tokenResponse.accessToken());
+
+        // 3. DB 유저 조회 or 신규 생성
+        User user = userRepository.findByEmail(googleUser.email())
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(googleUser.email())
+                            .name(googleUser.name())
+                            .provider(AuthProvider.GOOGLE)
+                            .role(UserRole.STUDENT)
+                            .status(UserStatus.ACTIVE)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        // 4. AccessToken / RefreshToken 생성
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+
+        // 5. RefreshToken 저장
+        RefreshToken token = new RefreshToken();
+        token.setUserId(user.getUserId());
+        token.setTokenValue(refreshToken);
+        token.setExpiredAt(LocalDateTime.now().plusDays(7));
+        refreshTokenRepository.save(token);
+
+        // 6. 로그인 응답 (Body용)
+        LoginResponse userInfo = new LoginResponse(
+                user.getEmail(),
+                user.getName(),
+                user.getRole().name(),
+                user.getProfileImage()
+        );
+
+        // 7. 소셜 로그인 최종 Response
+        return new GoogleLoginResponse(
+                accessToken,
+                refreshToken,
+                userInfo
+        );
+    }
+
 }

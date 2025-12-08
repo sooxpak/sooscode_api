@@ -46,4 +46,9 @@ public interface AuthService {
      * 이메일과 인증 코드를 검증해서 유효한지 확인
      */
     boolean verifyEmailCode(String email, String code);
+
+    /**
+     * 구글 로그인 유저 정보 얻기
+     */
+    GoogleLoginResponse loginUserResponse(String code);
 }

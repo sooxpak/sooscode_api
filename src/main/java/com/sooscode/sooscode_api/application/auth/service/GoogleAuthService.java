@@ -1,15 +1,22 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
-import com.sooscode.sooscode_api.application.auth.dto.TokenResponse;
+import com.sooscode.sooscode_api.application.auth.dto.GoogleOAuthTokenDto;
+import com.sooscode.sooscode_api.application.auth.dto.GoogleUserDto;
 
 public interface GoogleAuthService {
+
     /**
-     * Google OAuth 로그인 URL 생성
+     * Google 로그인 URL 생성
      */
     String buildGoogleLoginUrl();
 
     /**
-     * Google Callback 처리 (회원 생성 or 기존 유저 조회 + 토큰 발급)
+     * Authorization Code → Access Token
      */
-    TokenResponse processGoogleCallback(String code);
+    GoogleOAuthTokenDto getAccessToken(String code);
+
+    /**
+     * Access Token → Google 사용자 정보 조회
+     */
+    GoogleUserDto getUserInfo(String accessToken);
 }
