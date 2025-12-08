@@ -1,7 +1,7 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
 import com.sooscode.sooscode_api.application.auth.dto.*;
-import com.sooscode.sooscode_api.application.mypage.dto.UserInfo;
+import com.sooscode.sooscode_api.application.auth.util.CookieUtil;
 import com.sooscode.sooscode_api.domain.user.entity.EmailCode;
 import com.sooscode.sooscode_api.domain.user.entity.RefreshToken;
 import com.sooscode.sooscode_api.domain.user.entity.User;
@@ -14,17 +14,15 @@ import com.sooscode.sooscode_api.domain.user.repository.TempCredentialRepository
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
 import com.sooscode.sooscode_api.global.exception.errorcode.AuthErrorCode;
-import com.sooscode.sooscode_api.global.exception.errorcode.UserErrorCode;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
-import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,24 +42,22 @@ public class AuthServiceImpl implements AuthService{
     private final UserService userService;
     private final EmailCodeRepository emailCodeRepository;
     private final JavaMailSender mailSender;
-    private final TempCredentialRepository tempCredentialRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+
     /**
      * 로그인 - 인증 및 JWT 토큰 생성
      */
-    public LoginResult authenticateAndGenerateTokens(
+    public LoginResponse authenticateAndGenerateTokens(
             LoginRequest request,
-            AuthenticationManager authenticationManager
+            AuthenticationManager authenticationManager,
+            HttpServletResponse response
     ) {
-        /**
-         * 유저 + 프로필 이미지까지 Fetch Join 으로 로딩
-         */
+
+        // 1. 유저 조회 (파일 포함)
         User user = userRepository.findByEmailWithFile(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일"));
 
-        /**
-         * 비밀번호 검증만 수행 (userDetails 를 새로 꺼낼 필요 없음)
-         */
+        // 2. 비밀번호 인증
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -71,11 +67,13 @@ public class AuthServiceImpl implements AuthService{
 
         Long userId = user.getUserId();
 
-        String newAccessToken = jwtUtil.generateAccessToken(user);
+        // 3. Access Token 생성
+        String accessToken = jwtUtil.generateAccessToken(user);
 
-        Optional<RefreshToken> existing = refreshTokenRepository.findByUserId(userId);
+        // 4. Refresh Token 생성 or 조회
         String refreshToken;
 
+        Optional<RefreshToken> existing = refreshTokenRepository.findByUserId(userId);
         if (existing.isPresent()) {
             refreshToken = existing.get().getTokenValue();
         } else {
@@ -89,18 +87,18 @@ public class AuthServiceImpl implements AuthService{
             refreshTokenRepository.save(token);
         }
 
-        UserInfo userInfo = new UserInfo(
+        // 5. 쿠키에 토큰 저장 (중첩 DTO 사용하지 않기 때문에 이 위치가 맞음)
+        CookieUtil.addTokenCookies(response, new TokenPair(accessToken, refreshToken));
+
+        // 6. Body로 내려줄 평탄화된 유저 정보
+        return new LoginResponse(
                 user.getEmail(),
                 user.getName(),
-                user.getRole(),
+                user.getRole().name(),
                 user.getProfileImage()
         );
-
-        return new LoginResult(
-                new TokenPair(newAccessToken, refreshToken),
-                userInfo
-        );
     }
+
 
     /**
      * RT로 AT재발급
