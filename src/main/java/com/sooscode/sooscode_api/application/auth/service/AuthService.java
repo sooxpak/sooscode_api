@@ -1,6 +1,7 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
 import com.sooscode.sooscode_api.application.auth.dto.*;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 
 
@@ -8,13 +9,13 @@ public interface AuthService {
     /**
      * 이메일 + 비밀번호로 로그인하고 AT/RT + 유저 정보를 반환
      */
-    LoginResult authenticateAndGenerateTokens(LoginRequest request,
-                                              AuthenticationManager authenticationManager);
+    LoginResponse authenticateAndGenerateTokens(LoginRequest request,
+                                              AuthenticationManager authenticationManager,  HttpServletResponse response);
 
     /**
      * Refresh Token으로 Access Token을 재발급
      */
-    TokenPair reissueAccessToken(String refreshToken);
+    TokenResponse reissueAccessToken(String refreshToken);
 
     /**
      * 특정 유저의 Refresh Token을 삭제

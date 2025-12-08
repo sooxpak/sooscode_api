@@ -1,26 +1,21 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
 import com.sooscode.sooscode_api.domain.user.entity.User;
-import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
-@RequiredArgsConstructor
-public class UserService {
+public interface UserService {
 
-    private final UserRepository userRepository;
+    /**
+     * 신규 유저 저장
+     */
+    User saveUser(User user);
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
-    }
+    /**
+     * 이메일로 유저 조회
+     */
+    User findByEmail(String email);
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일 입니다."));
-    }
-
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
-    }
+    /**
+     * 이메일 존재 여부 확인
+     */
+    boolean existsByEmail(String email);
 }
