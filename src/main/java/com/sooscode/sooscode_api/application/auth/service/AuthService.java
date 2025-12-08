@@ -15,7 +15,7 @@ public interface AuthService {
     /**
      * Refresh Token으로 Access Token을 재발급
      */
-    TokenPair reissueAccessToken(String refreshToken);
+    TokenResponse reissueAccessToken(String refreshToken);
 
     /**
      * 특정 유저의 Refresh Token을 삭제

@@ -198,7 +198,7 @@ public class AuthController {
 
         String refreshToken = CookieUtil.getRefreshToken(request);
 
-        TokenPair tokens = authService.reissueAccessToken(refreshToken);
+        TokenResponse tokens = authService.reissueAccessToken(refreshToken);
 
         CookieUtil.addTokenCookies(response, tokens);
 

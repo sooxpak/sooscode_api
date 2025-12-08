@@ -10,7 +10,6 @@ import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
 import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
 import com.sooscode.sooscode_api.domain.user.repository.RefreshTokenRepository;
-import com.sooscode.sooscode_api.domain.user.repository.TempCredentialRepository;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.exception.CustomException;
 import com.sooscode.sooscode_api.global.exception.errorcode.AuthErrorCode;
@@ -88,7 +87,7 @@ public class AuthServiceImpl implements AuthService{
         }
 
         // 5. 쿠키에 토큰 저장 (중첩 DTO 사용하지 않기 때문에 이 위치가 맞음)
-        CookieUtil.addTokenCookies(response, new TokenPair(accessToken, refreshToken));
+        CookieUtil.addTokenCookies(response, new TokenResponse(accessToken, refreshToken));
 
         // 6. Body로 내려줄 평탄화된 유저 정보
         return new LoginResponse(
@@ -104,7 +103,7 @@ public class AuthServiceImpl implements AuthService{
      * RT로 AT재발급
      */
     @Transactional
-    public TokenPair reissueAccessToken(String refreshToken) {
+    public TokenResponse reissueAccessToken(String refreshToken) {
         RefreshToken savedToken =
                 refreshTokenRepository.findByTokenValue(refreshToken)
                         .orElseThrow(() -> new CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
@@ -121,7 +120,7 @@ public class AuthServiceImpl implements AuthService{
         /**
          *  RT는 변경하지 않음
          */
-        return new TokenPair(newAccessToken, savedToken.getTokenValue());
+        return new TokenResponse(newAccessToken, savedToken.getTokenValue());
     }
 
     /**

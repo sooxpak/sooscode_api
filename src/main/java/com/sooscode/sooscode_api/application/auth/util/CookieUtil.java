@@ -1,7 +1,7 @@
 package com.sooscode.sooscode_api.application.auth.util;
 
 import com.sooscode.sooscode_api.application.auth.dto.LoginResponse;
-import com.sooscode.sooscode_api.application.auth.dto.TokenPair;
+import com.sooscode.sooscode_api.application.auth.dto.TokenResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +13,7 @@ public class CookieUtil {
     /**
      * AT RT 쿠키 생성
      */
-    public static void addTokenCookies(HttpServletResponse response, TokenPair tokens) {
+    public static void addTokenCookies(HttpServletResponse response, TokenResponse tokens) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", tokens.getAccessToken())
                 .httpOnly(true)
                 .path("/")
