@@ -10,7 +10,7 @@ public interface AuthService {
      * 이메일 + 비밀번호로 로그인하고 AT/RT + 유저 정보를 반환
      */
     LoginResponse authenticateAndGenerateTokens(LoginRequest request,
-                                              AuthenticationManager authenticationManager,  HttpServletResponse response);
+                                                AuthenticationManager authenticationManager,  HttpServletResponse response);
 
     /**
      * Refresh Token으로 Access Token을 재발급

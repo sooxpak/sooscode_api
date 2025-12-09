@@ -26,9 +26,6 @@ public class RefreshToken {
     @Column(nullable = false, name="created_at")
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private boolean rememberMe;
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
