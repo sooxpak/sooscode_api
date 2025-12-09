@@ -54,8 +54,6 @@ public class AuthServiceImpl implements AuthService{
             HttpServletResponse response
     ) {
 
-        boolean rememberMe = request.isRememberMe();
-
         // 1. 유저 조회 (파일 포함)
         User user = userRepository.findByEmailWithFile(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일"));
@@ -76,7 +74,6 @@ public class AuthServiceImpl implements AuthService{
         // 4. Refresh Token 생성 or 조회
         String refreshToken;
 
-
         Optional<RefreshToken> existing = refreshTokenRepository.findByUserId(userId);
         if (existing.isPresent()) {
             refreshToken = existing.get().getTokenValue();
@@ -86,18 +83,13 @@ public class AuthServiceImpl implements AuthService{
             RefreshToken token = new RefreshToken();
             token.setTokenValue(refreshToken);
             token.setUserId(userId);
-            token.setRememberMe(rememberMe);
-            token.setExpiredAt(LocalDateTime.now().plusDays(rememberMe ? 30 : 7));
+            token.setExpiredAt(LocalDateTime.now().plusDays(7));
 
             refreshTokenRepository.save(token);
         }
 
         // 5. 쿠키에 토큰 저장 (중첩 DTO 사용하지 않기 때문에 이 위치가 맞음)
-        CookieUtil.addTokenCookies(
-                response,
-                new TokenResponse(accessToken, refreshToken, request.isRememberMe()),
-                request.isRememberMe()
-        );
+        CookieUtil.addTokenCookies(response, new TokenResponse(accessToken, refreshToken));
 
         // 6. Body로 내려줄 평탄화된 유저 정보
         return new LoginResponse(
@@ -130,13 +122,8 @@ public class AuthServiceImpl implements AuthService{
         /**
          *  RT는 변경하지 않음
          */
-        return new TokenResponse(
-                newAccessToken,
-                savedToken.getTokenValue(),
-                savedToken.isRememberMe()
-        );
+        return new TokenResponse(newAccessToken, savedToken.getTokenValue());
     }
-
 
     /**
      * RT 토큰 삭제
@@ -161,10 +148,10 @@ public class AuthServiceImpl implements AuthService{
         User newUser = userService.saveUser(user);
 
         return new RegisterResponse(
-            newUser.getUserId(),
-            newUser.getEmail(),
-            newUser.getName(),
-            newUser.getRole()
+                newUser.getUserId(),
+                newUser.getEmail(),
+                newUser.getName(),
+                newUser.getRole()
         );
     }
 
