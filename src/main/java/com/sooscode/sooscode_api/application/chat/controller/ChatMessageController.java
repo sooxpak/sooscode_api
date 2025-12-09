@@ -6,6 +6,7 @@ import com.sooscode.sooscode_api.application.chat.service.ChatMessageService;
 import com.sooscode.sooscode_api.global.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
-@CrossOrigin(origins = { "http://localhost:5173", "http://10.41.0.89:5173" })
+@CrossOrigin(origins = { "http://localhost:5173/chat", "http://10.41.0.89:5173" })
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
@@ -42,7 +43,6 @@ public class ChatMessageController {
         // WebSocket sessionId 조회
         String sessionId = accessor.getSessionId();
         Long userId = sessionRegistry.getUserId(sessionId);
-
         if (userId == null) {
             log.warn("Unauthorized user tried to send code (sessionId={})", sessionId);
             return null;

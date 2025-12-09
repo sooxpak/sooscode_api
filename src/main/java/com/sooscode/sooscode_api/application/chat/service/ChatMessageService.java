@@ -12,4 +12,5 @@ public interface ChatMessageService {
     ChatMessageResponse saveMessage(ChatMessageRequest request, Long userId);
     // 방별로 히스토리 조회
     List<ChatMessageResponse> findAllByClassRoom(Long classId);
+
 }

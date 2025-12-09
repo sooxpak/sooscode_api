@@ -149,4 +149,15 @@ public class SnapshotServiceImpl implements SnapshotService {
                 ))
                 .toList();
     }
+    @Override
+    @Transactional
+    public void deleteSnapshot(Long userId, Long classId, Long snapshotId){
+        long deleted = codeSnapshotRepository
+                .deleteByCodeSnapshotIdAndUser_UserIdAndClassRoom_ClassId(snapshotId, userId, classId);
+
+        if (deleted == 0) {
+           throw new CustomException(SnapshotErrorCode.NOT_FOUND);
+        }
+
+    }
 }

@@ -30,5 +30,6 @@ public interface SnapshotService {
     List<SnapShotResponse> readSnapshotByContentAndDate(Long userId, Long classId, String content,LocalDateTime start, LocalDateTime end);
     // 날짜별 조회(제목만 로딩)
     List<SnapshotTitleResponse> readContentByDate(Long userId, Long classId, LocalDateTime start, LocalDateTime end);
-
+    // 특정 스냅샷 삭제
+    void deleteSnapshot(Long userId, Long classId, Long snapshotId);
 }

@@ -188,6 +188,17 @@ public class SnapshotController {
 
         return ResponseEntity.ok(snapshotTitleResponses);
     }
+    @PostMapping("/delete")
+    public ResponseEntity<Void> deleteSnapshot(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam Long classId,
+            @RequestParam Long snapshotId
+    ) {
+        Long userId = userDetails.getUser().getUserId();
+        snapshotService.deleteSnapshot(userId, classId, snapshotId);
+        return ResponseEntity.noContent().build();
+    }
+
 
     private void writeEffectiveness(String title,String content) {
         if (title == null || title.trim().isEmpty()) {
