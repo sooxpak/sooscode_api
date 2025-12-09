@@ -8,15 +8,23 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class ChatMessageResponse {
+    private Long chatId;
     private Long classId;
     private Long userId;
+    private String email;
+    private String name;
     private String content;
     private LocalDateTime createdAt;
 
+
+
     public static ChatMessageResponse from(ChatMessage message) {
         return new ChatMessageResponse(
+                message.getChatId(),
                 message.getClassRoom().getClassId(),
                 message.getUser() != null ? message.getUser().getUserId() : null,
+                message.getUser() != null ? message.getUser().getEmail() : null,
+                message.getUser() != null ? message.getUser().getName() : null,
                 message.getContent(),
                 message.getCreatedAt()
         );

@@ -22,6 +22,8 @@ public class ChatMessageReactionController {
     public ChatReactionResponse countReaction(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                              @RequestBody ChatReactionRequest chatReactionRequest){
         Long userId = customUserDetails.getUser().getUserId();
+
+
         Long chatId = chatReactionRequest.getChatId();
         int count = chatMessageReactionService.addorRemoveReaction(userId, chatId);
         return new ChatReactionResponse(count);

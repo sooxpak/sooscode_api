@@ -3,6 +3,7 @@ package com.sooscode.sooscode_api.application.chat.controller;
 import com.sooscode.sooscode_api.application.chat.dto.ChatMessageResponse;
 import com.sooscode.sooscode_api.application.chat.dto.ChatMessageRequest;
 import com.sooscode.sooscode_api.application.chat.service.ChatMessageService;
+import com.sooscode.sooscode_api.domain.chatmessage.entity.ChatMessage;
 import com.sooscode.sooscode_api.global.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import java.util.List;
 public class ChatMessageController {
 
     private final WebSocketSessionRegistry sessionRegistry;
-    private final ChatMessageService chatMessageServiceService;
+    private final ChatMessageService chatMessageService;
 
 
     /**
@@ -34,7 +35,7 @@ public class ChatMessageController {
      */
     @MessageMapping("/chat/{classId}")
     @SendTo("/topic/chat/{classId}")
-    public ChatMessageRequest chatMessage(
+    public ChatMessageResponse chatMessage(
             @DestinationVariable Long classId,
             ChatMessageRequest request,
             StompHeaderAccessor accessor
@@ -47,22 +48,16 @@ public class ChatMessageController {
             log.warn("Unauthorized user tried to send code (sessionId={})", sessionId);
             return null;
         }
-
         request.setClassId(classId);
-        request.setUserId(userId);
-        request.setCreatedAt(LocalDateTime.now());
 
-        log.info("CODE SEND — classId={}, userId={}, createdAt={}, length={}",
-                classId, userId, request.getCreatedAt(),
-                request.getContent() != null ? request.getContent().length() : 0
-        );
-        chatMessageServiceService.saveMessage(request, userId);
-        return request;
+        ChatMessageResponse saved = chatMessageService.saveMessage(request, userId);
+
+        return saved;
     }
 
     @GetMapping("/history")
     public List<ChatMessageResponse> findAllByClassRoom_ClassIdOrderByCreatedAtAsc(@RequestParam("classId") Long classId) {
-        return chatMessageServiceService.findAllByClassRoom(classId);
+        return chatMessageService.findAllByClassRoom(classId);
     }
 
     private void effectiveness(){
