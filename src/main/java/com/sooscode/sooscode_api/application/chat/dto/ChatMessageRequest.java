@@ -10,8 +10,5 @@ import java.time.LocalDateTime;
 @Setter
 public class ChatMessageRequest {
     private Long classId;
-    private Long userId;
     private String content;
-    private LocalDateTime createdAt;
-
 }

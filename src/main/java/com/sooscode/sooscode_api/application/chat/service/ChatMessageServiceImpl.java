@@ -14,6 +14,7 @@ import com.sooscode.sooscode_api.global.exception.errorcode.UserErrorCode;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ChatMessageResponse> findAllByClassRoom(Long classId) {
         List<ChatMessage> messages =
                 chatMessageRepository.findAllByClassRoom_ClassIdOrderByCreatedAtAsc(classId);
