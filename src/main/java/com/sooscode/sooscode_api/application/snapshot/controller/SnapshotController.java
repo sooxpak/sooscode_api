@@ -5,6 +5,8 @@ import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotRequest;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotTitleResponse;
 import com.sooscode.sooscode_api.application.snapshot.service.SnapshotService;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
+import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.ChatStatus;
 import com.sooscode.sooscode_api.global.api.status.SnapshotStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +32,7 @@ public class SnapshotController {
     private final SnapshotService snapshotService;
 
     @PostMapping("/")
-    public ResponseEntity<?> save(
+    public ResponseEntity<ApiResponse<Void>> save(
             @RequestBody SnapshotRequest dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -39,10 +41,10 @@ public class SnapshotController {
         writeEffectiveness(dto.getTitle(), dto.getContent());
 
         snapshotService.saveCodeSnapshot(dto, userId);
-        return ResponseEntity.ok("스냅샷 저장 완료");
+        return ApiResponse.ok(SnapshotStatus.OK);
     }
     @PostMapping("/update")
-    public ResponseEntity<?> update(
+    public ResponseEntity<ApiResponse<Void>> update(
             @RequestBody SnapshotRequest dto,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long  snapshotId
@@ -52,13 +54,13 @@ public class SnapshotController {
         writeEffectiveness(dto.getTitle(), dto.getContent());
 
         snapshotService.updateCodeSnapshot(dto,LoginuserId, snapshotId);
-        return ResponseEntity.ok("스냅샷 수정 완료");
+        return ApiResponse.ok(SnapshotStatus.UPDATE_OK);
 
 
 
     }
     @GetMapping("/read")
-    public ResponseEntity<Page<SnapShotResponse>> read(
+    public ResponseEntity<ApiResponse<Page<SnapShotResponse>>> read(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long classId,
             @RequestParam(defaultValue = "0") int page,
@@ -72,11 +74,11 @@ public class SnapshotController {
 
         pageReadEffectiveness(snapShotResponses);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
 
     }
     @GetMapping("/read/title")
-    public ResponseEntity<List<SnapShotResponse>> searchByTitle(
+    public ResponseEntity<ApiResponse<List<SnapShotResponse>>> searchByTitle(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long classId,
             @RequestParam String title
@@ -88,11 +90,11 @@ public class SnapshotController {
 
         listReadEffectiveness(snapShotResponses);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
 
     }
     @GetMapping("/read/content")
-    public ResponseEntity<List<SnapShotResponse>> searchByContent(
+    public ResponseEntity<ApiResponse<List<SnapShotResponse>>> searchByContent(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long classId,
             @RequestParam String content
@@ -103,10 +105,10 @@ public class SnapshotController {
                 snapshotService.readSnapshotsByContent(userId, classId, content);
         System.out.println(content);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
     }
     @GetMapping("/read/date")
-    public ResponseEntity<List<SnapShotResponse>> searchByDate(
+    public ResponseEntity<ApiResponse<List<SnapShotResponse>>> searchByDate(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long classId,
             @RequestParam String day
@@ -123,10 +125,10 @@ public class SnapshotController {
 
         listReadEffectiveness(snapShotResponses);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
     }
     @GetMapping("read/title/date")
-    public ResponseEntity<List<SnapShotResponse>> searchByTitleAndDate(
+    public ResponseEntity<ApiResponse<List<SnapShotResponse>>> searchByTitleAndDate(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long classId,
             @RequestParam String title,
@@ -144,11 +146,11 @@ public class SnapshotController {
 
         listReadEffectiveness(snapShotResponses);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
 
     }
     @GetMapping("/read/content/date")
-    public ResponseEntity<List<SnapShotResponse>> searchByContentAndDate(
+    public ResponseEntity<ApiResponse<List<SnapShotResponse>>> searchByContentAndDate(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long classId,
             @RequestParam String content,
@@ -165,11 +167,11 @@ public class SnapshotController {
                 snapshotService.readSnapshotByContentAndDate(userId, classId, content, start, end);
         listReadEffectiveness(snapShotResponses);
 
-        return ResponseEntity.ok(snapShotResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
 
     }
     @GetMapping("/read/onlytitle/date")
-    public ResponseEntity<List<SnapshotTitleResponse>> searchOnlyTitleByDate(
+    public ResponseEntity<ApiResponse<List<SnapshotTitleResponse>>> searchOnlyTitleByDate(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam String day,
             @RequestParam Long classId
@@ -186,17 +188,17 @@ public class SnapshotController {
 
         listReadEffectiveness(snapshotTitleResponses);
 
-        return ResponseEntity.ok(snapshotTitleResponses);
+        return ApiResponse.ok(SnapshotStatus.READ_OK,snapshotTitleResponses);
     }
     @PostMapping("/delete")
-    public ResponseEntity<Void> deleteSnapshot(
+    public ResponseEntity<ApiResponse<Void>> deleteSnapshot(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long classId,
             @RequestParam Long snapshotId
     ) {
         Long userId = userDetails.getUser().getUserId();
         snapshotService.deleteSnapshot(userId, classId, snapshotId);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.ok(SnapshotStatus.DELETE_OK);
     }
 
 
