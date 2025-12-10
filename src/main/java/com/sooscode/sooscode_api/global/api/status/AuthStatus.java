@@ -48,12 +48,8 @@ public enum AuthStatus implements StatusCode {
     /**
      *  비밀번호 변경 관련
      */
-    PASSWORD_NOT_SAME_AS_CURRENT(HttpStatus.BAD_REQUEST, "AUTH_016", "현재 비밀번호가 일치하지 않습니다.");
-
-    /**
-     * 마이페이지 관련
-     */
-
+    PASSWORD_NOT_SAME_AS_CURRENT(HttpStatus.BAD_REQUEST, "AUTH_016", "현재 비밀번호가 일치하지 않습니다."),
+    PASSWORD_CANNOT_BE_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "AUTH_015", "새 비밀번호는 현재 비밀번호와 동일할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

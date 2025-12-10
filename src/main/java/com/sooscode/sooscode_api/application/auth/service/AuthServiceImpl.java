@@ -14,6 +14,7 @@ import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
+import com.sooscode.sooscode_api.global.utils.UserValidator;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -52,6 +53,9 @@ public class AuthServiceImpl implements AuthService{
             AuthenticationManager authenticationManager,
             HttpServletResponse response
     ) {
+
+        UserValidator.validateEmail(request.getEmail());
+        UserValidator.validatePassword(request.getPassword());
 
         // 1. 유저 조회 (파일 포함)
         User user = userRepository.findByEmailWithFile(request.getEmail())
@@ -140,6 +144,13 @@ public class AuthServiceImpl implements AuthService{
      * 회원가입
      */
     public RegisterResponse registerUser(RegisterRequest request) {
+        UserValidator.validateSignupData(
+                request.getName(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getConfirmPassword()
+        );
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());
@@ -175,6 +186,8 @@ public class AuthServiceImpl implements AuthService{
      * 이메일 인증 코드 발송
      */
     public void sendVerificationCode(String email) {
+        UserValidator.validateEmail(email);
+
         String code = generateCode();
 
         EmailCode emailCode = new EmailCode();
@@ -192,6 +205,8 @@ public class AuthServiceImpl implements AuthService{
      * 인증 코드 검증
      */
     public void verifyEmailCode(String email, String code) {
+        UserValidator.validateEmail(email);
+
         EmailCode emailCode = emailCodeRepository
                 .findTopByEmailOrderByEmailCodeIdDesc(email)
                 .orElseThrow(() -> new CustomException(AuthStatus.VERIFICATION_CODE_INVALID));
