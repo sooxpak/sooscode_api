@@ -168,7 +168,7 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MeResponse>> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new CustomException(AuthStatus.UNAUTHORIZED);
+            throw new CustomException(AuthStatus.USER_NOT_FOUND); //NOT FOUND 로 수정
         }
 
         User user = userDetails.getUser();
