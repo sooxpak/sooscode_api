@@ -6,6 +6,9 @@ import com.sooscode.sooscode_api.application.mypage.dto.MypageUserUpdateProfileR
 import com.sooscode.sooscode_api.application.mypage.dto.MypageUserUpdateResponse;
 import com.sooscode.sooscode_api.application.mypage.service.MypageUserService;
 import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
+import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,22 +29,20 @@ public class MypageUserController {
      * 비밀번호 변경
      */
     @PostMapping("/password/update")
-    public ResponseEntity<SBApiResponse> updatePassword(
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MypageUserUpdatePasswordRequest request
     ) {
         mypageService.updatePassword(userDetails.getUser(), request);
 
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "비밀번호가 성공적으로 변경되었습니다.", null)
-        );
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     /**
      * 프로필 수정
      */
     @PostMapping("/profile/update")
-    public ResponseEntity<SBApiResponse> updateProfile(
+    public ResponseEntity<ApiResponse<MypageUserUpdateResponse>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MypageUserUpdateProfileRequest request
     ) {
@@ -49,38 +50,30 @@ public class MypageUserController {
         User updated = mypageService.updateProfile(user, request);
 
         MypageUserUpdateResponse response = new MypageUserUpdateResponse(
-            updated.getUserId(),
-            updated.getEmail(),
-            updated.getName(),
-            updated.getRole(),
-            updated.getStatus()
+            updated.getName()
         );
 
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "프로필이 수정되었습니다.", response)
-        );
+        return ApiResponse.ok(GlobalStatus.OK, response);
     }
 
     /**
      * 회원 탈퇴
      */
     @PostMapping("/delete")
-    public ResponseEntity<SBApiResponse> deleteUser(
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         User user = userDetails.getUser();
         mypageService.deleteUser(user);
 
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "회원 탈퇴가 완료되었습니다.", null)
-        );
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     /**
      * 프로필 이미지 변경
      */
     @PostMapping(value = "/profile/image/update", consumes = "multipart/form-data")
-    public ResponseEntity<?> uploadProfileImage(
+    public ResponseEntity<ApiResponse<Void>> uploadProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart(value = "photo", required = false) MultipartFile photo
     ) throws IOException {
@@ -88,20 +81,20 @@ public class MypageUserController {
         Long userId = userDetails.getUser().getUserId();
         mypageService.updateProfileImage(userId, photo);
 
-        return ResponseEntity.ok(new SBApiResponse(true, "프로필 이미지 업로드 완료", null));
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     /**
      * 프로필 이미지 삭제
      */
     @PostMapping("/profile/image/delete")
-    public ResponseEntity<?> deleteProfileImage(
+    public  ResponseEntity<ApiResponse<Void>> deleteProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
 
         Long userId = userDetails.getUser().getUserId();
         mypageService.deleteProfileImage(userId);
 
-        return ResponseEntity.ok(new SBApiResponse(true, "프로필 이미지 삭제 완료", null));
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 }

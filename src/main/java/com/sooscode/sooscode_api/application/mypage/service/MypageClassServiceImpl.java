@@ -12,6 +12,7 @@ import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.status.ClassStatus;
+import com.sooscode.sooscode_api.global.api.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,12 +27,15 @@ import java.util.List;
 public class MypageClassServiceImpl implements MypageClassService {
     private final ClassRoomRepository classRoomRepository;
     private final ClassParticipantRepository classParticipantRepository;
+    private final UserRepository userRepository;
 
     /**
      * Class의 정보를 조회
      */
     @Override
     public MypageClassDetailResponse getClassDetail(Long classId) {
+
+        // 클래스가 존재하는지 검증
         ClassRoom classRoom = classRoomRepository.findById(classId)
                 .orElseThrow(() -> new CustomException(ClassStatus.CLASS_NOT_FOUND));
 
@@ -43,6 +47,7 @@ public class MypageClassServiceImpl implements MypageClassService {
     public List<MypageMyclassesResponse> getStudentClasses(Long userId) {
         log.info("getStudentClasses Service");
 
+        // 결과 0건 조회시 빈 리스트 반환
         List<ClassParticipant> classes = classParticipantRepository.findByUser_UserId(userId);
 
         log.info(classes.toString());
@@ -58,6 +63,11 @@ public class MypageClassServiceImpl implements MypageClassService {
     public List<MypageMyclassesResponse> getTeacherClasses(Long userId) {
         log.info("getTeacherClasses Service");
 
+        // user가 존재하는지 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserStatus.NOT_FOUND));
+
+        // 결과 0건 조회시 빈 리스트 반환
         List<ClassRoom> classes = classRoomRepository.findByUser_UserId(userId);
 
         return classes.stream()

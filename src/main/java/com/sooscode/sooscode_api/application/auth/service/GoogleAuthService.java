@@ -1,5 +1,6 @@
 package com.sooscode.sooscode_api.application.auth.service;
 
+import com.sooscode.sooscode_api.application.auth.dto.GoogleLoginResponse;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleOAuthTokenDto;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleUserDto;
 
@@ -19,4 +20,10 @@ public interface GoogleAuthService {
      * Access Token → Google 사용자 정보 조회
      */
     GoogleUserDto getUserInfo(String accessToken);
+
+    /**
+     * 구글 로그인 유저 정보 얻기
+     */
+    GoogleLoginResponse loginUserResponse(String code);
+
 }

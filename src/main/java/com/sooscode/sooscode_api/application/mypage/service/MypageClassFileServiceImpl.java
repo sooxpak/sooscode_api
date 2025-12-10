@@ -52,24 +52,31 @@ public class MypageClassFileServiceImpl implements MypageClassFileService {
      * 1) 클래스 자료 업로드 (DTO 기반)
      */
     @Override
-    public List<MypageClassFileResponse> uploadFiles(MypageClassFileUploadRequest rq) throws Exception {
+    public List<MypageClassFileResponse> uploadFiles(MypageClassFileUploadRequest request) throws Exception {
 
-        Long classId = rq.getClassId();
-        Long teacherId = rq.getTeacherId();
-        LocalDate date = LocalDate.parse(rq.getLectureDate());
+        Long classId = request.getClassId();
+        Long teacherId = request.getTeacherId();
+        LocalDate date = LocalDate.parse(request.getLectureDate());
 
         log.info("uploadFiles Service | classId={}, teacherId={}, date={}, fileCount={}",
-                classId, teacherId, rq.getFiles().size());
+                classId, teacherId, request.getFiles().size());
 
+        // 파일이 깨져서 올 수 있으니 2차적으로 파일이 존재하는지 검증
+        if (request.getFiles() == null || request.getFiles().isEmpty()) {
+            throw new CustomException(FileStatus.REQUIRED);
+        }
+
+        // 클래스가 존재하는지 검증
         ClassRoom classRoom = classRoomRepository.findById(classId)
                 .orElseThrow(() -> new CustomException(ClassStatus.CLASS_NOT_FOUND));
 
+        // 유저가 존재하는지 검증
         User teacher = userRepository.findById(teacherId)
                 .orElseThrow(() -> new CustomException(UserStatus.NOT_FOUND));
 
         List<MypageClassFileResponse> result = new ArrayList<>();
 
-        for (var file : rq.getFiles()) {
+        for (var file : request.getFiles()) {
 
             SooFile savedFile = s3FileService.uploadFile(file, FileType.LECTURE_MATERIAL);
 
@@ -96,6 +103,8 @@ public class MypageClassFileServiceImpl implements MypageClassFileService {
     @Transactional(readOnly = true)
     public Page<MypageClassFileResponse> getFilesByClassId(Long classId, Pageable pageable) {
 
+        // classRoomFile이 존재하는지 검증
+        // 존재하지 않으면 빈 리스트를 반환
         Page<ClassRoomFile> page =
                 classRoomFileRepository.findByClassRoom_ClassId(classId, pageable);
 
@@ -113,6 +122,8 @@ public class MypageClassFileServiceImpl implements MypageClassFileService {
             LocalDate lectureDate,
             Pageable pageable
     ) {
+        // classRoomFile이 존재하는지 검증
+        // 존재하지 않으면 빈 리스트를 반환
         Page<ClassRoomFile> page =
                 classRoomFileRepository.findByClassRoom_ClassIdAndLectureDate(classId, lectureDate, pageable);
 

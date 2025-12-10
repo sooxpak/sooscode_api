@@ -6,7 +6,6 @@ import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotTitleResponse;
 import com.sooscode.sooscode_api.application.snapshot.service.SnapshotService;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
-import com.sooscode.sooscode_api.global.api.status.ChatStatus;
 import com.sooscode.sooscode_api.global.api.status.SnapshotStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +72,6 @@ public class SnapshotController {
                 snapshotService.readAllSnapshots(userId, classId, pageable);
 
         pageReadEffectiveness(snapShotResponses);
-
         return ApiResponse.ok(SnapshotStatus.READ_OK,snapShotResponses);
 
     }

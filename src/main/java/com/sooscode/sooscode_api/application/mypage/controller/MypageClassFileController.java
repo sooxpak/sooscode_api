@@ -4,11 +4,15 @@ import com.sooscode.sooscode_api.application.mypage.dto.MypageClassFileResponse;
 import com.sooscode.sooscode_api.application.mypage.dto.MypageClassFileDeleteRequest;
 import com.sooscode.sooscode_api.application.mypage.dto.MypageClassFileUploadRequest;
 import com.sooscode.sooscode_api.application.mypage.service.MypageClassFileService;
+import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 
+import com.sooscode.sooscode_api.global.utils.FileValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -30,19 +34,31 @@ public class MypageClassFileController {
      * 1) 클래스 자료 업로드 (DTO 기반)
      */
     @PostMapping("/files/upload")
-    public ResponseEntity<?> uploadClassFiles(
+    public ResponseEntity<ApiResponse<List<MypageClassFileResponse>>> uploadClassFiles(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            MypageClassFileUploadRequest rq
+            MypageClassFileUploadRequest request
     ) throws Exception {
 
-        rq.setTeacherId(userDetails.getUser().getUserId());
+        // classID 검증 필요
+
+        // DTO에 TeacherId setting
+        request.setTeacherId(userDetails.getUser().getUserId());
 
         log.info("uploadClassFiles Controller | classId={}, teacherId={}, date={}, fileCount={}",
-                rq.getClassId(), rq.getTeacherId(), rq.getLectureDate(), rq.getFiles().size());
+                request.getClassId(), request.getTeacherId(), request.getLectureDate(), request.getFiles().size());
 
-        List<MypageClassFileResponse> response = mypageClassFileService.uploadFiles(rq);
+        // file null 체크, 갯수(10개) 이하 체크, 날짜형식 체크, 확장자, 사이즈 체크
+        FileValidator.validateUploadData(
+                request.getLectureDate(),
+                request.getFiles()
+        );
 
-        return ResponseEntity.ok(response);
+        // 1) 날짜 파싱 2) 날짜 형식 검증 3) 날짜 null 체크
+        LocalDate date = FileValidator.validateAndParseLectureDate(request.getLectureDate());
+
+        List<MypageClassFileResponse> response = mypageClassFileService.uploadFiles(request);
+
+        return ApiResponse.ok(GlobalStatus.OK, response);
     }
 
 
@@ -50,17 +66,18 @@ public class MypageClassFileController {
      * 2) 클래스 자료 전체 조회
      */
     @GetMapping("/{classId}/files")
-    public ResponseEntity<?> getClassFiles(
+    public ResponseEntity<ApiResponse<Page<MypageClassFileResponse>>> getClassFiles(
             @PathVariable Long classId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        // classId 유효성 검증 필요
 
         Pageable pageable = PageRequest.of(page, size);
 
         var response = mypageClassFileService.getFilesByClassId(classId, pageable);
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.ok(GlobalStatus.OK, response);
     }
 
 
@@ -68,40 +85,42 @@ public class MypageClassFileController {
      * 3) 특정 날짜 자료 조회
      */
     @GetMapping("/{classId}/files/by-date")
-    public ResponseEntity<?> getFilesByLectureDate(
+    public ResponseEntity<ApiResponse<Page<MypageClassFileResponse>>> getFilesByLectureDate(
             @PathVariable Long classId,
             @RequestParam("lectureDate") String lectureDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
 
-        LocalDate date;
-        try {
-            date = LocalDate.parse(lectureDate);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Expected yyyy-MM-dd");
-        }
+        // classId 검증필요
+
+        // 날짜 검증 1) yyyy-MM-dd 2) null & empty value
+        LocalDate date = FileValidator.validateAndParseLectureDate(lectureDate);
 
         Pageable pageable = PageRequest.of(page, size);
 
-        var response = mypageClassFileService.getFilesByLectureDate(classId, date, pageable);
+        Page<MypageClassFileResponse> response =
+                mypageClassFileService.getFilesByLectureDate(classId, date, pageable);
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.ok(GlobalStatus.OK, response);
     }
 
     /**
      * 4) 파일 삭제 (다중 삭제)
      */
     @DeleteMapping("/files/batch")
-    public ResponseEntity<?> deleteClassFiles(
+    public ResponseEntity<ApiResponse<Void>> deleteClassFiles(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody MypageClassFileDeleteRequest rq
+            @RequestBody MypageClassFileDeleteRequest request
     ) throws Exception {
 
-        rq.setTeacherId(userDetails.getUser().getUserId());
+        request.setTeacherId(userDetails.getUser().getUserId());
 
-        mypageClassFileService.deleteFiles(rq);
+        // fileId 리스트가 null인지, 리스트 비어있는지, 실제 값이 null인지, ID가 0인지 체크
+        FileValidator.validateDeleteFileIds(request.getFileIds());
 
-        return ResponseEntity.ok("Files deleted successfully");
+        mypageClassFileService.deleteFiles(request);
+
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 }

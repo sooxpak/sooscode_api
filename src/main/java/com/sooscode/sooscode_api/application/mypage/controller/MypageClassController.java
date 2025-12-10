@@ -1,12 +1,26 @@
 package com.sooscode.sooscode_api.application.mypage.controller;
 
+import com.sooscode.sooscode_api.application.mypage.dto.MypageClassDetailResponse;
+import com.sooscode.sooscode_api.application.mypage.dto.MypageMyclassesResponse;
 import com.sooscode.sooscode_api.application.mypage.service.MypageClassService;
+import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.domain.user.enums.UserRole;
+import com.sooscode.sooscode_api.global.api.exception.CustomException;
+import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.ClassStatus;
+import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
+import com.sooscode.sooscode_api.global.api.status.UserStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
+import com.sooscode.sooscode_api.global.utils.FileValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static com.sooscode.sooscode_api.global.api.status.GlobalStatus.BAD_REQUEST;
 
 @RestController
 @RequestMapping("/api/mypage")
@@ -18,31 +32,39 @@ public class MypageClassController {
 
     // 강의실 입장시 class의 data를 반환
     @GetMapping("/detail/{classId}")
-    public ResponseEntity<?> getClassDetail(@PathVariable Long classId) {
-        var response = mypageClassService.getClassDetail(classId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<MypageClassDetailResponse>> getClassDetail(
+            @PathVariable Long classId) {
+
+        FileValidator.validateClassId(classId);
+
+        MypageClassDetailResponse response =
+                mypageClassService.getClassDetail(classId);
+
+        return ApiResponse.ok(GlobalStatus.OK, response);
     }
 
     // Instructor 및 student에 따라 가지고있는 class의 List를 반환
     @GetMapping("/classes")
-    public ResponseEntity<?> getClasses(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<List<MypageMyclassesResponse>>> getClasses(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("Get My Classes Controller");
 
-        Object response;
-        Long userId = userDetails.getUser().getUserId();
+        List<MypageMyclassesResponse> response;
+        User user = userDetails.getUser();
 
-        String userRole = userDetails.getUser().getRole().toString();
+        UserRole userRole = user.getRole();
+        Long userId = user.getUserId();
 
         log.info("User Role : {}", userRole);
 
-        if(userRole.equals("STUDENT")){
+        if(userRole.equals(UserRole.STUDENT)) {
             response = mypageClassService.getStudentClasses(userId);
-        }else if(userRole.equals("INSTRUCTOR")){
+        }else if(userRole.equals(UserRole.INSTRUCTOR)){
             response = mypageClassService.getTeacherClasses(userId);
         }else {
-            return ResponseEntity.badRequest().body("Invalid Role");
+            throw new CustomException(UserStatus.SUSPENDED);
         }
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.ok(GlobalStatus.OK, response);
+        }
     }
-}

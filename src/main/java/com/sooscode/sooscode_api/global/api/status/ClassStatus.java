@@ -35,7 +35,12 @@ public enum ClassStatus implements StatusCode {
     INVALID_TIME_RANGE(HttpStatus.BAD_REQUEST, "COMMON_003", "유효하지 않은 시간 범위입니다"),
 
     INVALID_CLASS_ID(HttpStatus.BAD_REQUEST, "COMMON_004", "유효하지 않은 클래스 ID입니다"),
-    INVALID_USER_ID(HttpStatus.BAD_REQUEST, "COMMON_005", "유효하지 않은 사용자 ID입니다");
+    INVALID_USER_ID(HttpStatus.BAD_REQUEST, "COMMON_005", "유효하지 않은 사용자 ID입니다"),
+
+    // =========================
+    // 응답 성공 반환
+    // =========================
+    OK(HttpStatus.OK, "AUTH_000", "요청이 성공적으로 완료되었습니다");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -7,7 +7,9 @@ import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.status.UserStatus;
+import com.sooscode.sooscode_api.global.utils.UserValidator;
 import com.sooscode.sooscode_api.infra.file.service.S3FileService;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,14 +42,31 @@ public class MypageUserServiceImpl implements MypageUserService {
     @Transactional
     public void updatePassword(User user, MypageUserUpdatePasswordRequest request) {
 
-        // 현재 비밀번호 비교
+        /**
+         * 현재 비밀번호 비교
+         */
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+            throw new CustomException(AuthStatus.PASSWORD_NOT_SAME_AS_CURRENT);
         }
 
-        // 암호화해서 저장
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        /**
+         * 현재 비밀번호와 새 비밀번호가 같은지 검사
+         */
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new CustomException(AuthStatus.PASSWORD_CANNOT_BE_SAME_AS_OLD);
+        }
 
+        /**
+         * 새 비밀번호 형식 유효성 검사
+         */
+        UserValidator.validatePassword(request.getNewPassword());
+
+        /**
+         * 새 비밀번호 === 비밀번호 확인 검사
+         */
+        UserValidator.validatePasswordConfirm(request.getNewPassword(), request.getConfirmPassword());
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
@@ -60,6 +79,7 @@ public class MypageUserServiceImpl implements MypageUserService {
          * 변경하고 싶은 항목 아래 추가하면 됨
          */
         if (request.getName() != null) {
+            UserValidator.validateUsername(request.getName());
             user.setName(request.getName());
         }
 
