@@ -7,6 +7,7 @@ import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.status.UserStatus;
 import com.sooscode.sooscode_api.infra.file.service.S3FileService;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +41,19 @@ public class MypageUserServiceImpl implements MypageUserService {
     @Transactional
     public void updatePassword(User user, MypageUserUpdatePasswordRequest request) {
 
-        // 현재 비밀번호 비교
+        /**
+         *
+         현재 비밀번호 비교
+         */
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+            throw new CustomException(AuthStatus.PASSWORD_NOT_SAME_AS_CURRENT);
+        }
+
+        /**
+         * 비밀번호 확인
+         */
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new CustomException(AuthStatus.PASSWORD_WRONG);
         }
 
         // 암호화해서 저장
