@@ -12,7 +12,7 @@ import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
 import com.sooscode.sooscode_api.domain.user.repository.RefreshTokenRepository;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
-import com.sooscode.sooscode_api.application.admin.status.AuthStatus;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import static com.sooscode.sooscode_api.application.admin.status.AuthStatus.ERROR_WHILE_EMAIL_SENDING;
+import static com.sooscode.sooscode_api.global.api.status.AuthStatus.ERROR_WHILE_EMAIL_SENDING;
 
 @RequiredArgsConstructor
 @Service

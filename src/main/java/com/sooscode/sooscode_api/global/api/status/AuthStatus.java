@@ -1,6 +1,5 @@
-package com.sooscode.sooscode_api.application.admin.status;
+package com.sooscode.sooscode_api.global.api.status;
 
-import com.sooscode.sooscode_api.global.api.status.StatusCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +18,6 @@ public enum AuthStatus implements StatusCode {
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "AUTH_007", "리프레시 토큰을 찾을 수 없습니다"),
     REFRESH_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "AUTH_008", "리프레시 토큰이 만료되었습니다"),
     EMAIL_INACTIVE(HttpStatus.BAD_REQUEST, "USER_009", "이미 탈퇴한 이메일입니다.");
-
 
 
     private final HttpStatus httpStatus;

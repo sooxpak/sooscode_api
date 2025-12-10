@@ -4,7 +4,7 @@ import com.sooscode.sooscode_api.application.auth.service.GoogleAuthService;
 import com.sooscode.sooscode_api.application.auth.util.CookieUtil;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
-import com.sooscode.sooscode_api.application.admin.status.AuthStatus;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
@@ -42,7 +42,6 @@ public class AuthController {
             HttpServletResponse response)
     {
         LoginResponse userInfo = authService.authenticateAndGenerateTokens(request, authenticationManager, response);
-
         return ApiResponse.ok(AuthStatus.OK, userInfo);
     }
 
@@ -168,7 +167,7 @@ public class AuthController {
                 user.getRole().name(),
                 user.getProfileImage()
         );
-       return ApiResponse.ok(meResponse);
+       return ApiResponse.ok(AuthStatus.OK, meResponse);
     }
 
     /**

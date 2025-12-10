@@ -8,7 +8,7 @@ import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
-import com.sooscode.sooscode_api.application.admin.status.AuthStatus;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
