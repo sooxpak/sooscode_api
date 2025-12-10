@@ -3,12 +3,27 @@ package com.sooscode.sooscode_api.application.auth.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sooscode.sooscode_api.application.auth.dto.GoogleLoginResponse;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleOAuthTokenDto;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleUserDto;
+import com.sooscode.sooscode_api.application.auth.dto.LoginResponse;
+import com.sooscode.sooscode_api.domain.user.entity.RefreshToken;
+import com.sooscode.sooscode_api.domain.user.entity.User;
+import com.sooscode.sooscode_api.domain.user.enums.AuthProvider;
+import com.sooscode.sooscode_api.domain.user.enums.UserRole;
+import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
+import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
+import com.sooscode.sooscode_api.domain.user.repository.RefreshTokenRepository;
+import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
+import com.sooscode.sooscode_api.global.api.exception.CustomException;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
+import com.sooscode.sooscode_api.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -17,11 +32,18 @@ import org.springframework.http.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class GoogleAuthServiceImpl implements GoogleAuthService {
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -82,7 +104,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                 restTemplate.postForEntity(TOKEN_URL, request, String.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("[Google] Access Token 요청 실패: " + response.getStatusCode());
+            throw new CustomException(AuthStatus.GOOGLE_ACCESS_TOKEN_FAILED);
         }
 
         try {
@@ -97,7 +119,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("[Google] Token 응답 파싱 실패", e);
+            throw new CustomException(AuthStatus.GOOGLE_ACCESS_TOKEN_PARSING_FAILED);
         }
     }
 
@@ -117,7 +139,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                 restTemplate.exchange(USERINFO_URL, HttpMethod.GET, request, String.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("[Google] UserInfo 요청 실패: " + response.getStatusCode());
+            throw new CustomException(AuthStatus.GOOGLE_USER_INFO_FAILED);
         }
 
         try {
@@ -130,7 +152,61 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("[Google] UserInfo 파싱 실패", e);
+            throw new CustomException(AuthStatus.GOOGLE_USER_INFO_PARSING_FAILED);
         }
+    }
+
+
+    /**
+     * 구글 로그인 유저 정보 얻기
+     */
+    @Override
+    public GoogleLoginResponse loginUserResponse(String code) {
+
+        // 1. 구글 access_token 요청
+        GoogleOAuthTokenDto tokenResponse = getAccessToken(code);
+
+        // 2. 구글 사용자 정보 조회
+        GoogleUserDto googleUser = getUserInfo(tokenResponse.accessToken());
+
+        // 3. DB 유저 조회 or 신규 생성
+        User user = userRepository.findByEmail(googleUser.email())
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(googleUser.email())
+                            .name(googleUser.name())
+                            .provider(AuthProvider.GOOGLE)
+                            .role(UserRole.STUDENT)
+                            .status(UserStatus.ACTIVE)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        // 4. AccessToken / RefreshToken 생성
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+
+        // 5. RefreshToken 저장
+        RefreshToken token = new RefreshToken();
+        token.setUserId(user.getUserId());
+        token.setTokenValue(refreshToken);
+        token.setExpiredAt(LocalDateTime.now().plusDays(7));
+        refreshTokenRepository.save(token);
+
+        // 6. 로그인 응답 (Body용)
+        LoginResponse userInfo = new LoginResponse(
+                user.getEmail(),
+                user.getName(),
+                user.getRole().name(),
+                user.getProfileImage()
+        );
+
+        // 7. 소셜 로그인 최종 Response
+        return new GoogleLoginResponse(
+                accessToken,
+                refreshToken,
+                userInfo
+        );
     }
 }

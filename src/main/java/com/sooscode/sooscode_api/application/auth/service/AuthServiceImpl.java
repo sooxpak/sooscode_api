@@ -14,6 +14,7 @@ import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
+import com.sooscode.sooscode_api.global.utils.UserValidator;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,11 +41,9 @@ public class AuthServiceImpl implements AuthService{
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final UserService userService;
     private final EmailCodeRepository emailCodeRepository;
     private final JavaMailSender mailSender;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final GoogleAuthService googleAuthService;
 
     /**
      * 로그인 - 인증 및 JWT 토큰 생성
@@ -54,17 +54,24 @@ public class AuthServiceImpl implements AuthService{
             HttpServletResponse response
     ) {
 
+        UserValidator.validateEmail(request.getEmail());
+        UserValidator.validatePassword(request.getPassword());
+
         // 1. 유저 조회 (파일 포함)
         User user = userRepository.findByEmailWithFile(request.getEmail())
                 .orElseThrow(() -> new CustomException(AuthStatus.EMAIL_NOT_FOUND));
 
-        // 2. 비밀번호 인증
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        // 비밀번호 인증
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            throw new CustomException(AuthStatus.PASSWORD_WRONG);
+        }
 
         Long userId = user.getUserId();
 
@@ -115,7 +122,7 @@ public class AuthServiceImpl implements AuthService{
         }
 
         User user = userRepository.findById(savedToken.getUserId())
-                .orElseThrow(() -> new CustomException(AuthStatus.LOGIN_FAILED));
+                .orElseThrow(() -> new CustomException(AuthStatus.USER_NOT_FOUND));
 
         String newAccessToken = jwtUtil.generateAccessToken(user);
 
@@ -137,6 +144,13 @@ public class AuthServiceImpl implements AuthService{
      * 회원가입
      */
     public RegisterResponse registerUser(RegisterRequest request) {
+        UserValidator.validateSignupData(
+                request.getName(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getConfirmPassword()
+        );
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());
@@ -145,13 +159,12 @@ public class AuthServiceImpl implements AuthService{
         user.setRole(UserRole.STUDENT);
         user.setStatus(UserStatus.ACTIVE);
 
-        User newUser = userService.saveUser(user);
+        User newUser = saveUser(user);
 
         return new RegisterResponse(
-                newUser.getUserId(),
                 newUser.getEmail(),
                 newUser.getName(),
-                newUser.getRole()
+                newUser.getRole().name()
         );
     }
 
@@ -173,6 +186,8 @@ public class AuthServiceImpl implements AuthService{
      * 이메일 인증 코드 발송
      */
     public void sendVerificationCode(String email) {
+        UserValidator.validateEmail(email);
+
         String code = generateCode();
 
         EmailCode emailCode = new EmailCode();
@@ -189,23 +204,25 @@ public class AuthServiceImpl implements AuthService{
     /**
      * 인증 코드 검증
      */
-    public boolean verifyEmailCode(String email, String code) {
+    public void verifyEmailCode(String email, String code) {
+        UserValidator.validateEmail(email);
+
         EmailCode emailCode = emailCodeRepository
                 .findTopByEmailOrderByEmailCodeIdDesc(email)
-                .orElse(null);
+                .orElseThrow(() -> new CustomException(AuthStatus.VERIFICATION_CODE_INVALID));
 
-        if (emailCode == null) return false;
-        if (emailCode.getIsVerified()) return false;
-        if (emailCode.getExpiredAt().isBefore(LocalDateTime.now())) return false;
-
-        boolean isMatch = emailCode.getCode().equals(code);
-
-        if(isMatch) {
-            emailCode.setIsVerified(true);
-            emailCodeRepository.save(emailCode);
+        if (emailCode.getIsVerified()) {
+            throw new CustomException(AuthStatus.VERIFICATION_CODE_INVALID);
+        }
+        if (emailCode.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new CustomException(AuthStatus.VERIFICATION_EXPIRED);
+        }
+        if (!emailCode.getCode().equals(code)) {
+            throw new CustomException(AuthStatus.VERIFICATION_CODE_INVALID);
         }
 
-        return isMatch;
+        emailCode.setIsVerified(true);
+        emailCodeRepository.save(emailCode);
     }
 
     /**
@@ -465,57 +482,12 @@ public class AuthServiceImpl implements AuthService{
 //        return new LoginResponse(accessToken, refreshToken);
 //    }
 
+
     /**
-     * 구글 로그인 유저 정보 얻기
+     * 신규 유저 저장
      */
-    @Override
-    public GoogleLoginResponse loginUserResponse(String code) {
-
-        // 1. 구글 access_token 요청
-        GoogleOAuthTokenDto tokenResponse = googleAuthService.getAccessToken(code);
-
-        // 2. 구글 사용자 정보 조회
-        GoogleUserDto googleUser = googleAuthService.getUserInfo(tokenResponse.accessToken());
-
-        // 3. DB 유저 조회 or 신규 생성
-        User user = userRepository.findByEmail(googleUser.email())
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .email(googleUser.email())
-                            .name(googleUser.name())
-                            .provider(AuthProvider.GOOGLE)
-                            .role(UserRole.STUDENT)
-                            .status(UserStatus.ACTIVE)
-                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                            .build();
-                    return userRepository.save(newUser);
-                });
-
-        // 4. AccessToken / RefreshToken 생성
-        String accessToken = jwtUtil.generateAccessToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
-
-        // 5. RefreshToken 저장
-        RefreshToken token = new RefreshToken();
-        token.setUserId(user.getUserId());
-        token.setTokenValue(refreshToken);
-        token.setExpiredAt(LocalDateTime.now().plusDays(7));
-        refreshTokenRepository.save(token);
-
-        // 6. 로그인 응답 (Body용)
-        LoginResponse userInfo = new LoginResponse(
-                user.getEmail(),
-                user.getName(),
-                user.getRole().name(),
-                user.getProfileImage()
-        );
-
-        // 7. 소셜 로그인 최종 Response
-        return new GoogleLoginResponse(
-                accessToken,
-                refreshToken,
-                userInfo
-        );
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
 }

@@ -6,6 +6,7 @@ import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,14 +43,14 @@ public class AuthController {
             HttpServletResponse response)
     {
         LoginResponse userInfo = authService.authenticateAndGenerateTokens(request, authenticationManager, response);
-        return ApiResponse.ok(AuthStatus.OK, userInfo);
+        return ApiResponse.ok(GlobalStatus.OK, userInfo);
     }
 
     /**
      * 로그아웃
      */
     @PostMapping("/logout")
-    public ResponseEntity<SBApiResponse> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails user,
             HttpServletResponse response
     ) {
@@ -59,16 +60,14 @@ public class AuthController {
 
         CookieUtil.deleteTokenCookies(response, null);
 
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "로그아웃 성공", null)
-        );
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     /**
      * 회원가입
      */
     @PostMapping("/register")
-    public ResponseEntity<SBApiResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@RequestBody RegisterRequest request) {
 
         String email = request.getEmail();
 
@@ -91,35 +90,43 @@ public class AuthController {
         validateSignupData(request.getName(), request.getEmail(), request.getPassword(), request.getConfirmPassword());
 
         RegisterResponse data = authService.registerUser(request);
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "회원가입 성공", data)
-        );
+
+        return ApiResponse.ok(GlobalStatus.OK, data);
+
+    }
+
+    /**
+     * 이메일 중복 검사
+     * (회원가입 이메일 입력 시 선행 체크)
+     */
+    @GetMapping("/email/check")
+    public ResponseEntity<ApiResponse<Void>> checkEmail(@RequestParam String email) {
+        if (authService.isDuplicateActiveEmail(email)) {
+            throw new CustomException(AuthStatus.DUPLICATE_EMAIL);
+        }
+
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     /**
      * 이메일 인증 코드 요청
      */
     @PostMapping("/email/send")
-    public ResponseEntity<SBApiResponse> sendVerificationCode(@RequestBody EmailRequest request) {
+    public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@RequestBody EmailRequest request) {
         authService.sendVerificationCode(request.getEmail());
 
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "인증 코드가 이메일로 전송되었습니다.", null)
-        );
+        return  ApiResponse.ok(GlobalStatus.OK);
+
     }
 
     /**
      * 이메일 인증 코드 검증
      */
     @PostMapping("/email/verify")
-    public ResponseEntity<SBApiResponse> verifyEmailCode(@RequestBody EmailVerifyRequest request) {
-        boolean result = authService.verifyEmailCode(request.getEmail(), request.getCode());
-        if (!result) {
-            throw new CustomException(AuthStatus.VERIFICATION_CODE_INVALID);
-        }
-        return ResponseEntity.ok(
-                new SBApiResponse(true, "이메일 인증이 완료되었습니다.", null)
-        );
+    public ResponseEntity<ApiResponse<Void>> verifyEmailCode(@RequestBody EmailVerifyRequest request) {
+        authService.verifyEmailCode(request.getEmail(), request.getCode());
+
+        return  ApiResponse.ok(GlobalStatus.OK);
     }
 
     // Google 로그인 URL로 redirect
@@ -139,7 +146,7 @@ public class AuthController {
     ) {
 
         // 소셜 로그인 후 토큰 + 유저 정보 받기
-        GoogleLoginResponse data = authService.loginUserResponse(code);
+        GoogleLoginResponse data = googleAuthService.loginUserResponse(code);
 
         // 토큰을 쿠키에 저장
         CookieUtil.addTokenCookies(
@@ -160,6 +167,10 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MeResponse>> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new CustomException(AuthStatus.UNAUTHORIZED);
+        }
+
         User user = userDetails.getUser();
         MeResponse meResponse = new MeResponse(
                 user.getEmail(),
@@ -167,7 +178,7 @@ public class AuthController {
                 user.getRole().name(),
                 user.getProfileImage()
         );
-       return ApiResponse.ok(AuthStatus.OK, meResponse);
+       return ApiResponse.ok(GlobalStatus.OK, meResponse);
     }
 
     /**
@@ -199,7 +210,7 @@ public class AuthController {
      * RT로 AT재발급
      */
     @PostMapping("/token/reissue")
-    public ResponseEntity<SBApiResponse> reissueAccessToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Void>> reissueAccessToken(HttpServletRequest request, HttpServletResponse response) {
 
         String refreshToken = CookieUtil.getRefreshToken(request);
 
@@ -207,7 +218,7 @@ public class AuthController {
 
         CookieUtil.addTokenCookies(response, tokens);
 
-        return ResponseEntity.ok(new SBApiResponse(true, "Access Token 재발급 완료", tokens));
+        return ApiResponse.ok(GlobalStatus.OK);
     }
 
     @GetMapping("/test")

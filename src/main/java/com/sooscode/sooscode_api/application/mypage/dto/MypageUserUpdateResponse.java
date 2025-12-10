@@ -8,9 +8,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class MypageUserUpdateResponse {
-    private Long userId;
-    private String email;
     private String name;
-    private UserRole role;
-    private UserStatus status;
 }
