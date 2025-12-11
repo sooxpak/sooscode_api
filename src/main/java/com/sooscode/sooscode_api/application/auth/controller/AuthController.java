@@ -54,10 +54,7 @@ public class AuthController {
             @AuthenticationPrincipal CustomUserDetails user,
             HttpServletResponse response
     ) {
-        if (user != null) {
-            authService.deleteRefreshToken(user.getUser().getUserId());
-        }
-
+        authService.deleteRefreshToken(user.getUser().getUserId());
         CookieUtil.deleteTokenCookies(response, null);
 
         return ApiResponse.ok(GlobalStatus.OK);
@@ -162,26 +159,6 @@ public class AuthController {
 
 
     /**
-     * 현재 로그인 된 유저 정보
-     * SecurityContext에 있는 CustomUserDetails 추출됨
-     */
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<MeResponse>> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            throw new CustomException(AuthStatus.USER_NOT_FOUND); //NOT FOUND 로 수정
-        }
-
-        User user = userDetails.getUser();
-        MeResponse meResponse = new MeResponse(
-                user.getEmail(),
-                user.getName(),
-                user.getRole().name(),
-                user.getProfileImage()
-        );
-       return ApiResponse.ok(GlobalStatus.OK, meResponse);
-    }
-
-    /**
      * 임시 비밀번호 발급 요청
      */
 //    @PostMapping("/password/reset/request")
@@ -206,20 +183,6 @@ public class AuthController {
 //        );
 //    }
 
-    /**
-     * RT로 AT재발급
-     */
-    @PostMapping("/token/reissue")
-    public ResponseEntity<ApiResponse<Void>> reissueAccessToken(HttpServletRequest request, HttpServletResponse response) {
-
-        String refreshToken = CookieUtil.getRefreshToken(request);
-
-        TokenResponse tokens = authService.reissueAccessToken(refreshToken);
-
-        CookieUtil.addTokenCookies(response, tokens);
-
-        return ApiResponse.ok(GlobalStatus.OK);
-    }
 
     @GetMapping("/test")
     public ResponseEntity<?> test() {

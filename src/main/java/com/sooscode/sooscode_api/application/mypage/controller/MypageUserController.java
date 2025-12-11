@@ -1,13 +1,11 @@
 package com.sooscode.sooscode_api.application.mypage.controller;
 
-import com.sooscode.sooscode_api.application.auth.dto.SBApiResponse;
 import com.sooscode.sooscode_api.application.mypage.dto.MypageUserUpdatePasswordRequest;
 import com.sooscode.sooscode_api.application.mypage.dto.MypageUserUpdateProfileRequest;
 import com.sooscode.sooscode_api.application.mypage.dto.MypageUserUpdateResponse;
 import com.sooscode.sooscode_api.application.mypage.service.MypageUserService;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
-import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;

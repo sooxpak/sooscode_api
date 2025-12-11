@@ -1,11 +1,13 @@
 package com.sooscode.sooscode_api.global.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sooscode.sooscode_api.application.auth.dto.SBApiResponse;
+import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -32,9 +34,11 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json;charset=UTF-8");
 
-        SBApiResponse SBApiResponse = new SBApiResponse(false, "접근 권한이 없습니다.", null);
+        ResponseEntity<ApiResponse<Void>> responseEntity = ApiResponse.fail(GlobalStatus.FORBIDDEN);
+        ApiResponse<Void> apiResponse = responseEntity.getBody();
+
 
         ObjectMapper objectMapper = new ObjectMapper();
-        response.getWriter().write(objectMapper.writeValueAsString(SBApiResponse));
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }
