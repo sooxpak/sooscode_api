@@ -29,8 +29,8 @@ public class AdminClassServiceImpl implements AdminClassService {
         if(request.getInstructorId() != null){
             instructor = userRepository.findById(request.getInstructorId())
                     .orElseThrow(() -> new CustomException(AdminStatus.USER_NOT_FOUND));
-            if(instructor.getRole().equals(UserRole.INSTRUCTOR)){
-                new CustomException(AdminStatus.CLASS_INSTRUCTOR_INVALID);
+            if(!instructor.getRole().equals(UserRole.INSTRUCTOR)){
+                throw new CustomException(AdminStatus.CLASS_INSTRUCTOR_INVALID);
             }
         }
 
