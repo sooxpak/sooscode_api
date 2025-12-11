@@ -2,6 +2,7 @@ package com.sooscode.sooscode_api.application.chat.controller;
 
 import com.sooscode.sooscode_api.application.chat.dto.*;
 import com.sooscode.sooscode_api.application.chat.service.ChatMessageService;
+import com.sooscode.sooscode_api.application.chat.service.ChatPresenceService;
 import com.sooscode.sooscode_api.domain.chatmessage.entity.ChatMessage;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
@@ -32,6 +33,7 @@ public class ChatMessageController {
 
     private final WebSocketSessionRegistry sessionRegistry;
     private final ChatMessageService chatMessageService;
+    private final ChatPresenceService chatPresenceService;
 
 
     /**
@@ -75,8 +77,12 @@ public class ChatMessageController {
         Long userId = sessionRegistry.getUserId(sessionId);
 
         userEffectiveness(sessionId, userId);// 유저 Id 유효성 검사
-
         classEffectiveness(classId); // 클래스 Id 유효성검사
+
+        if(chatPresenceService.isAlreadyIn(userId, classId)) {
+            return null;
+        }
+        chatPresenceService.markEnter(userId, classId);
 
         EnterOrExitResponse response = chatMessageService.enterchatRoom(userId, classId);
         ChatMessageResponse enter = ChatMessageResponse.system(
@@ -101,8 +107,12 @@ public class ChatMessageController {
         Long userId = sessionRegistry.getUserId(sessionId);
 
         userEffectiveness(sessionId, userId);// 유저 Id 유효성 검사
-
         classEffectiveness(classId); // 클래스 Id 유효성검사
+
+        if(chatPresenceService.isAleadyOut(userId, classId)) {
+            return null;
+        }
+        chatPresenceService.markExit(userId, classId);
 
         EnterOrExitResponse response = chatMessageService.exitchatRoom(userId, classId);
         ChatMessageResponse exit = ChatMessageResponse.system(
@@ -128,6 +138,8 @@ public class ChatMessageController {
 
         userEffectiveness(sessionId, uesrId);
         classEffectiveness(classId);
+
+
 
         chatMessageService.deleteMessage(classId, request.getChatId(),  uesrId);
 

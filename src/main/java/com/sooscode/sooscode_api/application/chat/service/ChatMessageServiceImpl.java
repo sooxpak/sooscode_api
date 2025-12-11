@@ -23,12 +23,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Builder
+@Transactional(readOnly = true)
 public class ChatMessageServiceImpl implements ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final ClassRoomRepository classRoomRepository;
 
+    @Transactional
     @Override
     public ChatMessageResponse saveMessage(ChatMessageRequest request, Long userId) {
         User user = userRepository.findById(userId)
