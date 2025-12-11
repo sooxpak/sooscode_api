@@ -36,21 +36,22 @@ public class CompileController {
     @PostMapping("/run")
     public CompletableFuture<ResponseEntity<ApiResponse<CompileResultResponse>>> run(
             @Valid @RequestBody CompileRunRequest request){
-        log.info("===> /run 요청 수신");
+        log.info(" /run 요청 수신");
+
         /**
          *  비동기 컴파일 요청 Future 획득 시점
          * - 여기서는 future 만 반환, 실제 실행은 콜백이 도착해야 완료
          * - 현재 HTTP 스레드에서는 SecurityContext가 존재함 (인증된 상태).
          */
         try {
-            String code = new  String(
+            String decode = new  String(
                     Base64.getDecoder().decode(request.getCode()),
                     StandardCharsets.UTF_8
             );
 
             CompletableFuture<CompileResultResponse> resultFuture =
-                    compileService.runCode(code);
-            log.info("===> Future 생성 완료");
+                    compileService.runCode(decode);
+            log.info(" Future 생성 완료");
 
             /**
              *  비동기 처리 thenApply 가 토큰 인증정보를 가지고있지않음
