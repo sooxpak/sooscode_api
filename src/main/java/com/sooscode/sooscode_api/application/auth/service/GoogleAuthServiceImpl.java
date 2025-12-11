@@ -7,32 +7,27 @@ import com.sooscode.sooscode_api.application.auth.dto.GoogleLoginResponse;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleOAuthTokenDto;
 import com.sooscode.sooscode_api.application.auth.dto.GoogleUserDto;
 import com.sooscode.sooscode_api.application.auth.dto.LoginResponse;
-import com.sooscode.sooscode_api.domain.user.entity.RefreshToken;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.domain.user.enums.AuthProvider;
 import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.domain.user.enums.UserStatus;
-import com.sooscode.sooscode_api.domain.user.repository.EmailCodeRepository;
-import com.sooscode.sooscode_api.domain.user.repository.RefreshTokenRepository;
 import com.sooscode.sooscode_api.domain.user.repository.UserRepository;
 import com.sooscode.sooscode_api.global.api.exception.CustomException;
 import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.jwt.JwtUtil;
+import com.sooscode.sooscode_api.infra.redis.TokenRedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -43,7 +38,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRedisService tokenRedisService;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -156,7 +151,6 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         }
     }
 
-
     /**
      * 구글 로그인 유저 정보 얻기
      */
@@ -185,14 +179,22 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
 
         // 4. AccessToken / RefreshToken 생성
         String accessToken = jwtUtil.generateAccessToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        // 5. RefreshToken 저장
-        RefreshToken token = new RefreshToken();
-        token.setUserId(user.getUserId());
-        token.setTokenValue(refreshToken);
-        token.setExpiredAt(LocalDateTime.now().plusDays(7));
-        refreshTokenRepository.save(token);
+        // ========== 기존: DB 저장 ==========
+        // String refreshToken = jwtUtil.generateRefreshToken(user);
+        // RefreshToken token = new RefreshToken();
+        // token.setUserId(user.getUserId());
+        // token.setTokenValue(refreshToken);
+        // token.setExpiredAt(LocalDateTime.now().plusDays(7));
+        // refreshTokenRepository.save(token);
+
+        // ========== 변경: Redis 저장 ==========
+        String refreshToken = tokenRedisService.getRefreshToken(user.getUserId());
+
+        if (refreshToken == null || jwtUtil.isTokenExpired(refreshToken)) {
+            refreshToken = jwtUtil.generateRefreshToken(user);
+            tokenRedisService.saveRefreshToken(user.getUserId(), refreshToken);
+        }
 
         // 6. 로그인 응답 (Body용)
         LoginResponse userInfo = new LoginResponse(
