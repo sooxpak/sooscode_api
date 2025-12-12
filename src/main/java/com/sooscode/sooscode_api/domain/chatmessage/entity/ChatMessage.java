@@ -54,6 +54,8 @@ public class ChatMessage {
     /*@OneToMany(mappedBy = "parent")
     private List<ChatMessage> replies = new ArrayList<>();*/
 
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
+    private List<ChatMessageReaction> reactions = new ArrayList<>();
 
     // ChatMessage 엔티티 내부
     public static ChatMessage of(User user, ClassRoom classRoom, String content, ChatMessage reply) {

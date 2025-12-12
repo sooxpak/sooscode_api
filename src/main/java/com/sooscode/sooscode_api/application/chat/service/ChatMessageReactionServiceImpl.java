@@ -1,5 +1,6 @@
 package com.sooscode.sooscode_api.application.chat.service;
 
+import com.sooscode.sooscode_api.application.chat.dto.ChatMessageType;
 import com.sooscode.sooscode_api.application.chat.dto.ChatReactionMessage;
 import com.sooscode.sooscode_api.domain.chatmessage.entity.ChatMessage;
 import com.sooscode.sooscode_api.domain.chatmessage.entity.ChatMessageReaction;
@@ -57,12 +58,13 @@ public class ChatMessageReactionServiceImpl implements ChatMessageReactionServic
         ChatReactionMessage broadcast = new ChatReactionMessage(// type
                 chatId,                  // 어떤 메시지인지
                 count,                   // 현재 공감 총합
-                classId                  // 어떤 class 채팅방인지
+                classId,                 // 어떤 class 채팅방인지
+                ChatMessageType.REACTION
         );
 
         // 🔥 WebSocket 브로드캐스트
         simpMessagingTemplate.convertAndSend(
-                "/topic/chat/" + classId,
+                "/topic/class/" + classId + "/chat",
                 broadcast
         );
 

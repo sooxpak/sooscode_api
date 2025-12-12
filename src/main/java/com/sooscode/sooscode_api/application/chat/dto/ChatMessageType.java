@@ -4,5 +4,6 @@ public enum ChatMessageType {
     CHAT,
     ENTER,
     EXIT,
-    DELETE
+    DELETE,
+    REACTION
 }

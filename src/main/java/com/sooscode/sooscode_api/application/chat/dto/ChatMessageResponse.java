@@ -20,6 +20,7 @@ public class ChatMessageResponse {
     private String replyToName;
     private String replyToContent;
     private boolean deleted;
+    private int reactionCount;
 
 
 
@@ -37,7 +38,8 @@ public class ChatMessageResponse {
                 message.getReply() != null ? message.getReply().getChatId() : null,
                 message.getReply() != null && message.getReply().getUser() != null ? message.getReply().getUser().getName() : null,
                 message.getReply() != null ? message.getReply().getContent() : null,
-                message.isDeleted()
+                message.isDeleted(),
+                message.getReactions() != null ? message.getReactions().size() : 0
         );
     }
     public static ChatMessageResponse system( // 입퇴장용
@@ -60,7 +62,8 @@ public class ChatMessageResponse {
                 null,
                 null,
                 null,
-                false
+                false,
+                0
         );
     }
 
