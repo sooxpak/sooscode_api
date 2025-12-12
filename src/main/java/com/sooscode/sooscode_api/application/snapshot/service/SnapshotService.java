@@ -1,6 +1,7 @@
 package com.sooscode.sooscode_api.application.snapshot.service;
 
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapShotResponse;
+import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotLanguage;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotRequest;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotTitleResponse;
 import com.sooscode.sooscode_api.domain.snapshot.entity.CodeSnapshot;
@@ -11,7 +12,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SnapshotService {
-    
+    // 코드 스냅샷 Id로 단일조회
+    SnapShotResponse readSnapshot(Long userId, Long classId, Long snapshotId);
     // 스냅샷 저장하기
     CodeSnapshot saveCodeSnapshot(SnapshotRequest snapshotRequest, Long userId);
     // 스냅샷 업데이트
@@ -29,7 +31,10 @@ public interface SnapshotService {
     // 내용과 날짜별 조회
     List<SnapShotResponse> readSnapshotByContentAndDate(Long userId, Long classId, String content,LocalDateTime start, LocalDateTime end);
     // 날짜별 조회(제목만 로딩)
-    List<SnapshotTitleResponse> readContentByDate(Long userId, Long classId, LocalDateTime start, LocalDateTime end);
+    List<SnapshotTitleResponse> readTitleByDate(Long userId, Long classId, LocalDateTime start, LocalDateTime end);
     // 특정 스냅샷 삭제
     void deleteSnapshot(Long userId, Long classId, Long snapshotId);
+    // 언어 + 날짜별 조회
+    List<SnapShotResponse> readSnapshotByLanguageAndDate(Long userId, Long classId, SnapshotLanguage language, LocalDateTime start, LocalDateTime end);
+
 }

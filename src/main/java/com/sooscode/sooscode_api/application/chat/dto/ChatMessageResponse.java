@@ -66,5 +66,23 @@ public class ChatMessageResponse {
                 0
         );
     }
+    public ChatMessageResponse delete() {
+        return new ChatMessageResponse(
+                this.chatId,
+                this.classId,
+                this.userId,
+                this.email,
+                this.name,
+                "삭제된 메시지입니다.",
+                this.type,
+                this.createdAt,
+                this.replyToChatId,
+                this.replyToName,
+                this.replyToContent,
+                true,
+                this.reactionCount
+        );
+    }
+
 
 }

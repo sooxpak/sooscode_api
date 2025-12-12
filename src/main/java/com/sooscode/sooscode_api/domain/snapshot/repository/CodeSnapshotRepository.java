@@ -1,5 +1,6 @@
 package com.sooscode.sooscode_api.domain.snapshot.repository;
 
+import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotLanguage;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotTitleResponse;
 import com.sooscode.sooscode_api.domain.snapshot.entity.CodeSnapshot;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CodeSnapshotRepository extends JpaRepository<CodeSnapshot, Long> {
@@ -28,4 +30,8 @@ public interface CodeSnapshotRepository extends JpaRepository<CodeSnapshot, Long
     List<SnapshotTitleResponse> findByUser_UserIdAndClassRoom_ClassIdAndCreatedAtBetween(Long userId, Long classId, LocalDateTime start, LocalDateTime end);
     // 특정 스냅샷 삭제
     long deleteByCodeSnapshotIdAndUser_UserIdAndClassRoom_ClassId(Long codeSnapshotId, Long userId, Long classId);
+    //  언어 + classId + 시작/끝 날짜
+    List<CodeSnapshot> findByUser_UserIdAndClassRoom_ClassIdAndLanguageAndCreatedAtBetween(Long userId, Long classId, SnapshotLanguage language, LocalDateTime start, LocalDateTime end);
+    // codeSnapshotId로 조회
+    Optional<CodeSnapshot> findByCodeSnapshotIdAndUser_UserIdAndClassRoom_ClassId(Long codeSnapshotId, Long userUserId, Long classRoomClassId);
 }

@@ -15,6 +15,7 @@ public class SnapShotResponse {
     private Long classId;
     private String title;
     private String content;
+    private SnapshotLanguage language;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -25,6 +26,7 @@ public class SnapShotResponse {
                 .classId(entity.getClassRoom().getClassId())
                 .title(entity.getTitle())
                 .content(entity.getContent())
+                .language(entity.getLanguage())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

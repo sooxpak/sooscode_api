@@ -14,5 +14,6 @@ public class SnapshotRequest {
     private String title;
     private String content;
     private LocalDateTime updatedAt;
+    private SnapshotLanguage language;
 
 }

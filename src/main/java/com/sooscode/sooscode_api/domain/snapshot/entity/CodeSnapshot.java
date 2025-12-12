@@ -1,6 +1,7 @@
 package com.sooscode.sooscode_api.domain.snapshot.entity;
 
 
+import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotLanguage;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -30,6 +31,10 @@ public class CodeSnapshot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
     private ClassRoom classRoom;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "language", nullable = false, length = 20)
+    private SnapshotLanguage language = SnapshotLanguage.JAVA;
 
     @Column(name = "title", length = 255)
     private String title;

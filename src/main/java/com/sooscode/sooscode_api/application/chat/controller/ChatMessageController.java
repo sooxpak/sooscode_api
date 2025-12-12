@@ -58,11 +58,14 @@ public class ChatMessageController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> findAllByClassRoom_ClassIdOrderByCreatedAtAsc(@RequestParam("classId") Long classId) {
-        classEffectiveness(classId); // 클래스 Id 유효성검사
+    public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> history(
+            @RequestParam Long classId
+    ) {
+        classEffectiveness(classId); // 클래스 Id 유효성검사 (DB든 뭐든 유지)
         List<ChatMessageResponse> response = chatMessageService.findAllByClassRoom(classId);
-        return  ApiResponse.ok(ChatStatus.READ_OK,response);
+        return ApiResponse.ok(ChatStatus.READ_OK, response);
     }
+
     @MessageMapping("/chat/{classId}/enter")
     @SendTo("/topic/class/{classId}/chat")
     public ResponseEntity<ApiResponse<ChatMessageResponse>> enterChat(

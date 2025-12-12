@@ -18,7 +18,9 @@ public enum SnapshotStatus implements StatusCode {
     LIST_EMPTY(HttpStatus.BAD_REQUEST, "SNAPSHOT_007", "데이터 정보가 없습니다"),
     CONTENT_TOO_LONG(HttpStatus.BAD_REQUEST, "SNAPSHOT_008", "내용은 50자 이하여야 합니다"),
     TITLE_EMPTY(HttpStatus.BAD_REQUEST, "SNAPSHOT_009", "제목을 입력해주세요"),
-    TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "SNAPSHOT_010", "제목은 50자 이하여야 합니다");
+    TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "SNAPSHOT_010", "제목은 50자 이하여야 합니다"),
+    DATE_EMPTY(HttpStatus.BAD_REQUEST, "SNAPSHOT_011", "시작날짜, 끝날짜는 필수입력값입니다."),
+    LANGUAGE_EMPTY(HttpStatus.BAD_REQUEST, "SNAPSHOT_012", "사용할수 없는 언어입니다");
 
     private final HttpStatus httpStatus;
     private final String code;

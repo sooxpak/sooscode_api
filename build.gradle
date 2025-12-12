@@ -60,6 +60,8 @@ dependencies {
     implementation 'software.amazon.awssdk:s3'
     // Livekit WebFlux 의존성 추가 (Test중 )
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // 시간
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 tasks.named('test') {

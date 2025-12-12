@@ -1,5 +1,7 @@
 package com.sooscode.sooscode_api.application.chat.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sooscode.sooscode_api.application.chat.dto.ChatMessageResponse;
 import com.sooscode.sooscode_api.application.chat.dto.ChatMessageType;
 import com.sooscode.sooscode_api.application.chat.dto.ChatReactionMessage;
 import com.sooscode.sooscode_api.domain.chatmessage.entity.ChatMessage;
@@ -13,6 +15,7 @@ import com.sooscode.sooscode_api.global.api.status.ChatStatus;
 import com.sooscode.sooscode_api.global.api.status.UserStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,55 +25,64 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class ChatMessageReactionServiceImpl implements ChatMessageReactionService {
 
-    private final UserRepository userRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final ChatMessageReactionRepository chatMessageReactionRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper; // chatKey에서 classId 뽑을 때
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     @Transactional
     public int addorRemoveReaction(Long userId, Long chatId) {
-        User user = userRepository.findById(userId).
-                 orElseThrow(() -> new CustomException(UserStatus.NOT_FOUND));
 
-        ChatMessage chatMessage = chatMessageRepository.findById(chatId).
-                orElseThrow(() -> new CustomException(ChatStatus.NOT_FOUND));
+        //  메시지 존재 확인 + classId 추출 (Redis에서)
+        Object raw = redisTemplate.opsForValue().get(chatKey(chatId));
+        if (raw == null) throw new CustomException(ChatStatus.NOT_FOUND);
 
-        boolean alreadyexist = chatMessageReactionRepository.existsByMessageAndUser(chatMessage, user);
+        // 네가 Redis에 뭘 저장하냐에 따라:
+        // - ChatMessageResponse를 저장 중이면 ChatMessageResponse로 convert
+        // - Redis 전용 DTO(ChatMessageRedisDto)로 바꿨으면 그걸로 convert
+        ChatMessageResponse msg = objectMapper.convertValue(raw, ChatMessageResponse.class);
 
-        if(alreadyexist){
-            chatMessageReactionRepository.deleteByMessageAndUser(chatMessage, user);
-        }else{
-            ChatMessageReaction chatMessageReaction = new ChatMessageReaction();
-            chatMessageReaction.setUser(user); // 컬럼 추가되면서 countById로
-            chatMessageReaction.setMessage(chatMessage);
-            chatMessageReaction.setCreatedAt(LocalDateTime.now());
+        Long classId = msg.getClassId();
+        if (classId == null) throw new CustomException(ChatStatus.ACCESS_DENIED);
 
-            chatMessageReactionRepository.save(chatMessageReaction);
+        //  삭제된 메시지면 리액션 막기(정책)
+        if (msg.isDeleted()) throw new CustomException(ChatStatus.ACCESS_DENIED);
+
+        String reactionKey = reactionKey(chatId);
+        String member = String.valueOf(userId);
+
+        Boolean already = redisTemplate.opsForSet().isMember(reactionKey, member);
+
+        if (Boolean.TRUE.equals(already)) {
+            redisTemplate.opsForSet().remove(reactionKey, member);
+        } else {
+            redisTemplate.opsForSet().add(reactionKey, member);
         }
 
-        int count = chatMessageReactionRepository.countByMessage(chatMessage);
+        Long countLong = redisTemplate.opsForSet().size(reactionKey);
+        int count = countLong == null ? 0 : countLong.intValue();
 
-        // 🔥 브로드캐스트를 위해 classId 가져오기
-        Long classId = chatMessage.getClassRoom().getClassId();
-
-        // 🔥 모든 사용자에게 업데이트 내용 전송할 DTO
-        ChatReactionMessage broadcast = new ChatReactionMessage(// type
-                chatId,                  // 어떤 메시지인지
-                count,                   // 현재 공감 총합
-                classId,                 // 어떤 class 채팅방인지
+        //  브로드캐스트 DTO (너 기존거 그대로)
+        ChatReactionMessage broadcast = new ChatReactionMessage(
+                chatId,
+                count,
+                classId,
                 ChatMessageType.REACTION
         );
 
-        // 🔥 WebSocket 브로드캐스트
         simpMessagingTemplate.convertAndSend(
                 "/topic/class/" + classId + "/chat",
                 broadcast
         );
 
-        // 컨트롤러 반환은 기존대로 count만
         return count;
+    }
 
+    private String chatKey(Long chatId) {
+        return "ws:chat:" + chatId;
+    }
 
+    private String reactionKey(Long chatId) {
+        return "ws:chat:" + chatId + ":reactions";
     }
 }

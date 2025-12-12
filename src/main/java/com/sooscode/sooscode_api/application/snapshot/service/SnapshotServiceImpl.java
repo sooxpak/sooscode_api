@@ -1,5 +1,6 @@
 package com.sooscode.sooscode_api.application.snapshot.service;
 
+import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotLanguage;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotTitleResponse;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapShotResponse;
 import com.sooscode.sooscode_api.application.snapshot.dto.SnapshotRequest;
@@ -31,6 +32,17 @@ public class SnapshotServiceImpl implements SnapshotService {
     private final ClassRoomRepository classRoomRepository;
 
     @Override
+    public SnapShotResponse readSnapshot(Long userId, Long classId, Long snapshotId){
+        CodeSnapshot snapshot = codeSnapshotRepository
+                .findByCodeSnapshotIdAndUser_UserIdAndClassRoom_ClassId(
+                        snapshotId, userId, classId
+                )
+                .orElseThrow(() -> new CustomException(SnapshotStatus.NOT_FOUND));
+
+        return SnapShotResponse.from(snapshot);
+    }
+
+    @Override
     public CodeSnapshot saveCodeSnapshot(SnapshotRequest rq, Long userId) {
 
         User user = userRepository.findById(userId)
@@ -44,6 +56,7 @@ public class SnapshotServiceImpl implements SnapshotService {
                 .classRoom(classRoom)
                 .title(rq.getTitle())
                 .content(rq.getContent())
+                .language(rq.getLanguage())
                 .updatedAt(rq.getUpdatedAt())
                 .build();
 
@@ -136,7 +149,7 @@ public class SnapshotServiceImpl implements SnapshotService {
     }
 
     @Override
-    public List<SnapshotTitleResponse> readContentByDate(Long userId, Long classId, LocalDateTime start, LocalDateTime end) {
+    public List<SnapshotTitleResponse> readTitleByDate(Long userId, Long classId, LocalDateTime start, LocalDateTime end) {
 
         return codeSnapshotRepository
                 .findByUser_UserIdAndClassRoom_ClassIdAndCreatedAtBetween(
@@ -158,5 +171,15 @@ public class SnapshotServiceImpl implements SnapshotService {
            throw new CustomException(SnapshotStatus.NOT_FOUND);
         }
 
+    }
+    @Override
+    public  List<SnapShotResponse> readSnapshotByLanguageAndDate(Long userId, Long classId, SnapshotLanguage language, LocalDateTime start, LocalDateTime end){
+        return codeSnapshotRepository
+                .findByUser_UserIdAndClassRoom_ClassIdAndLanguageAndCreatedAtBetween(
+                        userId, classId, language, start, end
+                )
+                .stream()
+                .map(SnapShotResponse::from)
+                .toList();
     }
 }
