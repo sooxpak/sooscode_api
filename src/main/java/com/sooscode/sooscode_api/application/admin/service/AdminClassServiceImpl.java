@@ -5,7 +5,6 @@ import com.sooscode.sooscode_api.application.admin.dto.AdminClassResponse;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassParticipant;
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
 import com.sooscode.sooscode_api.domain.classroom.enums.ClassMode;
-import com.sooscode.sooscode_api.domain.classroom.enums.ClassStatus;
 import com.sooscode.sooscode_api.domain.classroom.repository.ClassParticipantRepository;
 import com.sooscode.sooscode_api.domain.classroom.repository.ClassRoomRepository;
 import com.sooscode.sooscode_api.domain.user.entity.User;
@@ -56,7 +55,6 @@ public class AdminClassServiceImpl implements AdminClassService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .file(null)
-                .status(ClassStatus.UPCOMING)
                 .mode(ClassMode.FREE)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
@@ -127,11 +125,6 @@ public class AdminClassServiceImpl implements AdminClassService {
         // 클래스 조회
         ClassRoom classRoom = classroomRepository.findById(classId)
                 .orElseThrow(() -> new CustomException(ClassRoomStatus.CLASS_NOT_FOUND));
-
-        // 진행 중인 클래스는 삭제 불가
-        if (classRoom.getStatus() == ClassStatus.ONGOING) {
-            throw new CustomException(ClassRoomStatus.CLASS_STATUS_INVALID);
-        }
 
         // Soft Delete: isActive를 false로 변경
         classRoom.setActive(false);
@@ -379,7 +372,6 @@ public class AdminClassServiceImpl implements AdminClassService {
         // 페이지 조회
         Page<ClassRoom> classPage = classroomRepository.findByKeywordAndStatusAndDateRange(
                 filter.getKeyword(),
-                filter.getStatus(),
                 filter.getStartDate(),
                 filter.getEndDate(),
                 pageable

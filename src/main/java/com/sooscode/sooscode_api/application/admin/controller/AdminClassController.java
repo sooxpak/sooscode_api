@@ -3,7 +3,6 @@ package com.sooscode.sooscode_api.application.admin.controller;
 import com.sooscode.sooscode_api.application.admin.dto.AdminClassRequest;
 import com.sooscode.sooscode_api.application.admin.dto.AdminClassResponse;
 import com.sooscode.sooscode_api.application.admin.service.AdminClassService;
-import com.sooscode.sooscode_api.domain.classroom.enums.ClassStatus;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
 import com.sooscode.sooscode_api.global.api.status.AdminStatus;
 import lombok.RequiredArgsConstructor;
@@ -135,7 +134,6 @@ public class AdminClassController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) ClassStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -146,7 +144,6 @@ public class AdminClassController {
         // 필터 객체 생성
         AdminClassRequest.SearchFilter filter = new AdminClassRequest.SearchFilter();
         filter.setKeyword(keyword);
-        filter.setStatus(status);
         filter.setStartDate(startDate);
         filter.setEndDate(endDate);
         filter.setSortBy(sortBy);

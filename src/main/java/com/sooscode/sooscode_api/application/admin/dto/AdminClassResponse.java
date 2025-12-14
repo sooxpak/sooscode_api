@@ -1,11 +1,9 @@
 package com.sooscode.sooscode_api.application.admin.dto;
 
 import com.sooscode.sooscode_api.domain.classroom.entity.ClassRoom;
-import com.sooscode.sooscode_api.domain.classroom.enums.ClassStatus;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -22,7 +20,6 @@ public class AdminClassResponse {
         private String title;
         private String description;
         private boolean isOnline;
-        private ClassStatus status;
         private boolean isActive;
         private LocalDate startDate;
         private LocalDate endDate;
@@ -38,7 +35,6 @@ public class AdminClassResponse {
                     .title(classRoom.getTitle())
                     .description(classRoom.getDescription())
                     .isOnline(classRoom.isOnline())
-                    .status(classRoom.getStatus())
                     .isActive(classRoom.isActive())
                     .startDate(classRoom.getStartDate())
                     .endDate(classRoom.getEndDate())

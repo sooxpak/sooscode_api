@@ -18,6 +18,7 @@ public enum ClassRoomStatus implements StatusCode {
     CLASS_OFFLINE(HttpStatus.FORBIDDEN, "CLASS_005", "오프라인 클래스는 온라인 접속이 불가합니다"),
     CLASS_INVALID_STATUS(HttpStatus.BAD_REQUEST, "CLASS_006", "유효하지 않은 클래스 상태입니다"),
     CLASS_ALREADY_EXISTS(HttpStatus.CONFLICT, "CLASS_007", "이미 존재하는 클래스입니다"),
+    CLASS_NOT_ACTIVE(HttpStatus.PAYMENT_REQUIRED, "CLASS_008", "정지된 클래스입니다. 관리자에게 문의하세요"),
 
     // =========================
     // PARTICIPANT (학생 참여)

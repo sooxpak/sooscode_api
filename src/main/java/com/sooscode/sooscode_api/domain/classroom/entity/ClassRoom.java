@@ -1,7 +1,6 @@
 package com.sooscode.sooscode_api.domain.classroom.entity;
 
 import com.sooscode.sooscode_api.domain.classroom.enums.ClassMode;
-import com.sooscode.sooscode_api.domain.classroom.enums.ClassStatus;
 import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -48,10 +47,6 @@ public class ClassRoom {
     private boolean isActive;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private ClassStatus status;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "mode", nullable = false)
     private ClassMode mode;
 
@@ -60,6 +55,9 @@ public class ClassRoom {
 
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
+
+    @Column(name = "last_closed_date")
+    private LocalDate lastClosedDate;
 
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;

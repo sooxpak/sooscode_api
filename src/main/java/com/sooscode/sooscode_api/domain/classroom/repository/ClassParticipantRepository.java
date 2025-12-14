@@ -14,12 +14,8 @@ public interface ClassParticipantRepository extends JpaRepository<ClassParticipa
     List<ClassParticipant> findByClassRoom_ClassId(Long classId);
     // classId와 userId를 조합해서 Participant를 찾아서 반환
     Optional<ClassParticipant> findByClassRoom_ClassIdAndUser_UserId(Long classId, Long userId);
-
-    /**
-     * 특정 클래스에 참여하고 있는 유저 조회
-     */
-    List<ClassParticipant> findByUser(User user);
     // class에 참가하고있는 user를 조회
     List<ClassParticipant> findByUser_UserId(Long userId);
-
+    // class에 참가하고 있는 학생 수 조회
+    int countByClassRoom_ClassId(Long classId);
 }

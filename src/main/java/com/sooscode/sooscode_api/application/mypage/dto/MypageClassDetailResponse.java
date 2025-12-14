@@ -28,7 +28,6 @@ public class MypageClassDetailResponse {
                 .title(classRoom.getTitle())
                 .description(classRoom.getDescription())
                 .mode(classRoom.getMode().name())
-                .status(classRoom.getStatus().name())
                 .startDate(classRoom.getStartDate())
                 .endDate(classRoom.getEndDate())
                 .startTime(classRoom.getStartTime())
