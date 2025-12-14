@@ -29,7 +29,8 @@ public enum FileStatus implements StatusCode {
     COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE_017", "파일 업로드 개수 제한을 초과했습니다"),
     DATE_REQUIRED(HttpStatus.BAD_REQUEST, "FILE_018", "업로드 날짜는 필수값입니다"),
     DATE_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "FILE_019", "업로드 날짜 형식이 유효하지 않습니다"),
-    INVALID_CLASS_ID(HttpStatus.BAD_REQUEST, "FILE_020", "유효하지 않은 클래스 ID입니다");
+    INVALID_CLASS_ID(HttpStatus.BAD_REQUEST, "FILE_020", "유효하지 않은 클래스 ID입니다"),
+    INVALID_ROLE(HttpStatus.BAD_REQUEST, "FILE_021", "파일 업로드 접근 권한이 없습니다.");
 
 
     private final HttpStatus httpStatus;

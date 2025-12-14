@@ -12,6 +12,7 @@ import com.sooscode.sooscode_api.domain.classroom.repository.ClassRoomRepository
 import com.sooscode.sooscode_api.domain.file.entity.SooFile;
 import com.sooscode.sooscode_api.domain.file.enums.FileType;
 import com.sooscode.sooscode_api.domain.file.repository.SooFileRepository;
+import com.sooscode.sooscode_api.domain.user.enums.UserRole;
 import com.sooscode.sooscode_api.infra.file.service.S3FileService;
 
 import com.sooscode.sooscode_api.domain.user.entity.User;
@@ -73,6 +74,12 @@ public class MypageClassFileServiceImpl implements MypageClassFileService {
         // 유저가 존재하는지 검증
         User teacher = userRepository.findById(teacherId)
                 .orElseThrow(() -> new CustomException(UserStatus.NOT_FOUND));
+
+        UserRole userRole = teacher.getRole();
+        if (userRole == UserRole.STUDENT) {
+            throw new CustomException(FileStatus.INVALID_ROLE);
+        }
+
 
         List<MypageClassFileResponse> result = new ArrayList<>();
 
