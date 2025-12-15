@@ -114,7 +114,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             );
 
         } catch (Exception e) {
-            throw new CustomException(AuthStatus.GOOGLE_ACCESS_TOKEN_PARSING_FAILED);
+            throw new CustomException(AuthStatus.GOOGLE_ACCESS_TOKEN_FAILED);
         }
     }
 
@@ -147,7 +147,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             );
 
         } catch (Exception e) {
-            throw new CustomException(AuthStatus.GOOGLE_USER_INFO_PARSING_FAILED);
+            throw new CustomException(AuthStatus.GOOGLE_USER_INFO_FAILED);
         }
     }
 

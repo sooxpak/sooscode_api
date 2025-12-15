@@ -43,7 +43,7 @@ public class AuthController {
             HttpServletResponse response)
     {
         LoginResponse userInfo = authService.authenticateAndGenerateTokens(request, authenticationManager, response);
-        return ApiResponse.ok(GlobalStatus.OK, userInfo);
+        return ApiResponse.ok(AuthStatus.LOGIN_SUCCESS, userInfo);
     }
 
     /**
@@ -57,7 +57,7 @@ public class AuthController {
     ) {
         authService.logout(user.getUser().getUserId(), accessToken);  // RT 삭제 + AT 블랙리스트
         CookieUtil.deleteTokenCookies(response, null);
-        return ApiResponse.ok(GlobalStatus.OK);
+        return ApiResponse.ok(AuthStatus.LOGOUT_SUCCESS);
     }
 
     /**
@@ -88,7 +88,7 @@ public class AuthController {
 
         RegisterResponse data = authService.registerUser(request);
 
-        return ApiResponse.ok(GlobalStatus.OK, data);
+        return ApiResponse.ok(AuthStatus.REGISTER_SUCCESS, data);
 
     }
 
@@ -102,7 +102,7 @@ public class AuthController {
             throw new CustomException(AuthStatus.DUPLICATE_EMAIL);
         }
 
-        return ApiResponse.ok(GlobalStatus.OK);
+        return ApiResponse.ok(AuthStatus.EMAIL_VERIFY_SUCCESS);
     }
 
     /**
@@ -112,7 +112,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@RequestBody EmailRequest request) {
         authService.sendVerificationCode(request.getEmail());
 
-        return  ApiResponse.ok(GlobalStatus.OK);
+        return  ApiResponse.ok(AuthStatus.EMAIL_SEND_SUCCESS);
 
     }
 
@@ -123,7 +123,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> verifyEmailCode(@RequestBody EmailVerifyRequest request) {
         authService.verifyEmailCode(request.getEmail(), request.getCode());
 
-        return  ApiResponse.ok(GlobalStatus.OK);
+        return  ApiResponse.ok(AuthStatus.EMAIL_VERIFY_SUCCESS);
     }
 
     // Google 로그인 URL로 redirect
@@ -174,7 +174,7 @@ public class AuthController {
 
         CookieUtil.addTokenCookies(response, tokens);
 
-        return ApiResponse.ok(GlobalStatus.OK);
+        return ApiResponse.ok(AuthStatus.TOKEN_REISSUE_SUCCESS);
     }
 
     /**

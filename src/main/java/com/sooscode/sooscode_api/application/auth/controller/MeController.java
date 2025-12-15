@@ -6,6 +6,7 @@ import com.sooscode.sooscode_api.application.auth.service.AuthServiceImpl;
 import com.sooscode.sooscode_api.application.auth.util.CookieUtil;
 import com.sooscode.sooscode_api.domain.user.entity.User;
 import com.sooscode.sooscode_api.global.api.response.ApiResponse;
+import com.sooscode.sooscode_api.global.api.status.AuthStatus;
 import com.sooscode.sooscode_api.global.api.status.GlobalStatus;
 import com.sooscode.sooscode_api.global.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,7 +39,7 @@ public class MeController  {
                 user.getRole().name(),
                 user.getProfileImage()
         );
-        return ApiResponse.ok(GlobalStatus.OK, meResponse);
+        return ApiResponse.ok(AuthStatus.ME_SUCCESS, meResponse);
     }
 
 }
