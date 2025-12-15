@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()  // WebSocket 경로 허용
                         .requestMatchers("/api/compile/callback/**").permitAll()
+                        .requestMatchers("/api/code/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )

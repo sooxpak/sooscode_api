@@ -83,6 +83,25 @@ public class UserValidator {
     }
 
     /**
+     * 비밀번호 길이만 검증 (8~16자)
+     * @throws CustomException
+     */
+    public static void validatePasswordLength(String password) {
+        if (password == null || password.isEmpty()) {
+            throw new CustomException(ValidStatus.PASSWORD_REQUIRED);
+        }
+
+        if (password.length() < 8) {
+            throw new CustomException(ValidStatus.PASSWORD_TOO_SHORT);
+        }
+
+        if (password.length() > 16) {
+            throw new CustomException(ValidStatus.PASSWORD_TOO_LONG);
+        }
+    }
+
+
+    /**
      * 비밀번호 확인 검증
      * @throws CustomException
      */

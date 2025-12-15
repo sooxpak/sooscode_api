@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
     ) {
 
         UserValidator.validateEmail(request.getEmail());
-        UserValidator.validatePassword(request.getPassword());
+        UserValidator.validatePasswordLength(request.getPassword());
 
         // 1. 유저 조회 (파일 포함)
         User user = userRepository.findByEmailWithFile(request.getEmail())
