@@ -112,7 +112,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@RequestBody EmailRequest request) {
         authService.sendVerificationCode(request.getEmail());
 
-        return  ApiResponse.ok(AuthStatus.EMAIL_SEND_SUCCESS);
+        return ApiResponse.ok(AuthStatus.EMAIL_SEND_SUCCESS);
 
     }
 

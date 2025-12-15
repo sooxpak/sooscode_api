@@ -221,6 +221,11 @@ public class AuthServiceImpl implements AuthService {
      * 이메일 인증 코드 발송
      */
     public void sendVerificationCode(String email) {
+
+        if (userRepository.existsByEmail(email)) {
+            throw new CustomException(AuthStatus.DUPLICATE_EMAIL);
+        }
+
         UserValidator.validateEmail(email);
 
         String code = generateCode();
