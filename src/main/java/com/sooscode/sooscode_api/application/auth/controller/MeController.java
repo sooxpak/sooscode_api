@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MeController  {
     private final AuthServiceImpl authService;
+    private final S3FileService s3FileService;
 
     private final S3FileService s3FileService;
     /**

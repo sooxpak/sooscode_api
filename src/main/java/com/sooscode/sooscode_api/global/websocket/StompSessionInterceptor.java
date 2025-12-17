@@ -69,7 +69,7 @@ public class StompSessionInterceptor implements ChannelInterceptor {
         Long userId = userDetails.getUser().getUserId();
         String sessionId = accessor.getSessionId();
 
-        // ✅ 방법 1: URL 파라미터에서 역할 정보 추출 (프론트에서 전달)
+        // URL 파라미터에서 역할 정보 추출 (프론트에서 전달)
         boolean isInstructor = extractRoleFromHeaders(accessor);
 
 
@@ -84,7 +84,15 @@ public class StompSessionInterceptor implements ChannelInterceptor {
 //        sessionRegistry.registerSession(sessionId, userId);
 //        log.info("WS CONNECT — sessionId={}, userId={}", sessionId, userId);
 
-        // ✅ 역할 정보 포함하여 새 세션 등록
+
+        // 중복 입장 방지
+        String currentClassId = sessionRegistry.getClassId(sessionId);
+        if (sessionId.equals(currentClassId)) {
+            log.info("이미 입장한 클래스 - 중복 입장 방지: classId={}, userId={}", sessionId, userId);
+            return;
+        }
+
+        // 역할 정보 포함하여 새 세션 등록
         sessionRegistry.registerSession(sessionId, userId, isInstructor);
         log.info("WS CONNECT — sessionId={}, userId={}, isInstructor={}",
                 sessionId, userId, isInstructor);
