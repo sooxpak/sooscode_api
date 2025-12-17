@@ -43,31 +43,41 @@ public class LivekitController {
             @RequestBody LivekitTokenRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        log.info("[LiveKit] createToken 요청 - userId={}, roomName={}",
+                user.getUser().getUserId(), request.getRoomName());
+
         String token = livekitService.createToken(request, user.getUser().getUserId());
         return ResponseEntity.ok(Map.of("token", token));
     }
 
     @PostMapping("/room")
     public ResponseEntity<?> createRoom(@RequestBody LivekitRoomRequest request) {
-        log.info("request body = {}", request);
+        log.info("[LiveKit] createRoom 요청 - roomName={}", request.getRoomName());
+
         var response = livekitService.createRoom(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/room/end")
     public ResponseEntity<?> endRoom(@RequestBody LivekitRoomEndRequest request) {
+        log.info("[LiveKit] endRoom 요청 - roomName={}", request.getRoomName());
+
         livekitService.endRoom(request.getRoomName());
         return ResponseEntity.ok(Map.of("ended", true));
     }
 
     @GetMapping("/room/{roomName}/participants")
     public ResponseEntity<?> listParticipants(@PathVariable String roomName) {
+        log.info("[LiveKit] listParticipants 요청 - roomName={}", roomName);
+
         var list = livekitService.getParticipants(roomName);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/rooms")
     public ResponseEntity<?> getRooms() {
+        log.info("[LiveKit] getRooms 요청");
+
         var rooms = livekitService.getRooms();
         return ResponseEntity.ok(rooms);
     }

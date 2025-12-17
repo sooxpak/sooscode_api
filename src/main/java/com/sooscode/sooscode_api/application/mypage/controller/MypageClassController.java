@@ -36,6 +36,8 @@ public class MypageClassController {
     public ResponseEntity<ApiResponse<MypageClassDetailResponse>> getClassDetail(
             @PathVariable Long classId) {
 
+        log.info("[Mypage] getClassDetail 요청 - classId={}", classId);
+
         FileValidator.validateClassId(classId);
 
         MypageClassDetailResponse response =
@@ -51,7 +53,7 @@ public class MypageClassController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        log.info("Get My Classes Controller");
+        log.info("[Mypage] getClasses 요청 - page={}, size={}", page, size);
 
         User user = userDetails.getUser();
         UserRole userRole = user.getRole();

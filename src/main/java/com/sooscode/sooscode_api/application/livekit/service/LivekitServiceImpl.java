@@ -101,6 +101,7 @@ public class LivekitServiceImpl implements LivekitService {
         grant.put("roomJoin", true);
         grant.put("canPublish", true);
         grant.put("canSubscribe", true);
+        grant.put("identity", identity);
 
         SecretKey key = Keys.hmacShaKeyFor(apiSecret.getBytes(StandardCharsets.UTF_8));
 

@@ -40,8 +40,10 @@ public class MypageUserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MypageUserUpdatePasswordRequest request
     ) {
-        mypageService.updatePassword(userDetails.getUser(), request);
+        log.info("[MypageUser] updatePassword 요청 - userId={}",
+                userDetails.getUser().getUserId());
 
+        mypageService.updatePassword(userDetails.getUser(), request);
         return ApiResponse.ok(GlobalStatus.OK);
     }
 
@@ -53,11 +55,14 @@ public class MypageUserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MypageUserUpdateProfileRequest request
     ) {
+        log.info("[MypageUser] updateProfile 요청 - userId={}",
+                userDetails.getUser().getUserId());
+
         User user = userDetails.getUser();
         User updated = mypageService.updateProfile(user, request);
 
         MypageUserUpdateResponse response = new MypageUserUpdateResponse(
-            updated.getName()
+                updated.getName()
         );
 
         return ApiResponse.ok(GlobalStatus.OK, response);
@@ -70,6 +75,9 @@ public class MypageUserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[MypageUser] deleteUser 요청 - userId={}",
+                userDetails.getUser().getUserId());
+
         User user = userDetails.getUser();
         mypageService.deleteUser(user);
 
@@ -85,6 +93,9 @@ public class MypageUserController {
             @RequestPart(value = "photo", required = false) MultipartFile photo
     ) throws IOException {
 
+        log.info("[MypageUser] uploadProfileImage 요청 - userId={}",
+                userDetails.getUser().getUserId());
+
         Long userId = userDetails.getUser().getUserId();
         mypageService.updateProfileImage(userId, photo);
 
@@ -98,6 +109,8 @@ public class MypageUserController {
     public  ResponseEntity<ApiResponse<Void>> deleteProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[MypageUser] deleteProfileImage 요청 - userId={}",
+                userDetails.getUser().getUserId());
 
         Long userId = userDetails.getUser().getUserId();
         mypageService.deleteProfileImage(userId);
@@ -116,10 +129,8 @@ public class MypageUserController {
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
     ) throws IOException {
 
-        log.info("thumbnailupload 시도");
-
-        UserRole userRole = userDetails.getUser().getRole();
-
+        log.info("[MypageUser] uploadClassRoomThumbnail 요청 - classId={}, userId={}",
+                classId, userDetails.getUser().getUserId());
 
         classRoomService.updateThumbnail(
                 classId,
@@ -129,7 +140,4 @@ public class MypageUserController {
 
         return ApiResponse.ok(GlobalStatus.OK);
     }
-
-
-
 }

@@ -39,13 +39,14 @@ public class MypageClassFileController {
             MypageClassFileUploadRequest request
     ) throws Exception {
 
-        // classID 검증 필요
+        log.info("[MypageFile] uploadClassFiles 요청 - classId={}",
+                request.getClassId());
 
         // DTO에 TeacherId setting
         request.setTeacherId(userDetails.getUser().getUserId());
 
-        log.info("uploadClassFiles Controller | classId={}, teacherId={}, date={}, fileCount={}",
-                request.getClassId(), request.getTeacherId(), request.getLectureDate(), request.getFiles().size());
+        log.info("[MypageFile] uploadClassFiles teacher 설정 - teacherId={}",
+                request.getTeacherId());
 
         // file null 체크, 갯수(10개) 이하 체크, 날짜형식 체크, 확장자, 사이즈 체크
         FileValidator.validateUploadData(
@@ -58,9 +59,12 @@ public class MypageClassFileController {
 
         List<MypageClassFileResponse> response = mypageClassFileService.uploadFiles(request);
 
+        log.info("[MypageFile] uploadClassFiles 완료 - classId={}, fileCount={}",
+                request.getClassId(),
+                response.size());
+
         return ApiResponse.ok(GlobalStatus.OK, response);
     }
-
 
     /**
      * 2) 클래스 자료 전체 조회
@@ -71,7 +75,8 @@ public class MypageClassFileController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        // classId 유효성 검증 필요
+        log.info("[MypageFile] getClassFiles 요청 - classId={}, page={}, size={}",
+                classId, page, size);
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -79,7 +84,6 @@ public class MypageClassFileController {
 
         return ApiResponse.ok(GlobalStatus.OK, response);
     }
-
 
     /**
      * 3) 특정 날짜 자료 조회
@@ -91,10 +95,10 @@ public class MypageClassFileController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        log.info("[MypageFile] getFilesByLectureDate 요청 - classId={}, lectureDate={}, page={}, size={}",
+                classId, lectureDate, page, size);
 
-        // classId 검증필요
-
-        // 날짜 검증 1) yyyy-MM-dd 2) null & empty value
+        // 날짜 검증
         LocalDate date = FileValidator.validateAndParseLectureDate(lectureDate);
 
         Pageable pageable = PageRequest.of(page, size);
@@ -114,12 +118,20 @@ public class MypageClassFileController {
             @RequestBody MypageClassFileDeleteRequest request
     ) throws Exception {
 
+        log.info("[MypageFile] deleteClassFiles 요청 - fileIds={}",
+                request.getFileIds());
+
         request.setTeacherId(userDetails.getUser().getUserId());
 
-        // fileId 리스트가 null인지, 리스트 비어있는지, 실제 값이 null인지, ID가 0인지 체크
+        log.info("[MypageFile] deleteClassFiles teacher 설정 - teacherId={}",
+                request.getTeacherId());
+
+        // fileId 리스트 검증
         FileValidator.validateDeleteFileIds(request.getFileIds());
 
         mypageClassFileService.deleteFiles(request);
+
+        log.info("[MypageFile] deleteClassFiles 완료");
 
         return ApiResponse.ok(GlobalStatus.OK);
     }
