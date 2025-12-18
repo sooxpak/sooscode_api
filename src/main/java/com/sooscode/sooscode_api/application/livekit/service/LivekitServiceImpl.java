@@ -102,6 +102,10 @@ public class LivekitServiceImpl implements LivekitService {
         grant.put("canPublish", true);
         grant.put("canSubscribe", true);
         grant.put("identity", identity);
+        String metadata = String.format(
+                "{\"role\":\"%s\",\"userId\":%d}",
+                request.getRole(), userId
+        );
 
         SecretKey key = Keys.hmacShaKeyFor(apiSecret.getBytes(StandardCharsets.UTF_8));
 
@@ -111,6 +115,7 @@ public class LivekitServiceImpl implements LivekitService {
                 .claim("nbf", now - 10)
                 .setExpiration(new Date((now + 3600) * 1000))
                 .claim("video", grant)
+                .claim("metadata", metadata)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
