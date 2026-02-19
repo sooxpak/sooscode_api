@@ -192,11 +192,4 @@
 - **RESTful API** 총 **17개** 엔드포인트 설계 및 구현
 
 ---
-
-# 🎯 핵심 도전 과제
-
-**1. Spring Security + JWT + Redis 인증 체계 구축**
-토큰 기반 인증과 Redis 캐싱 전략을 결합해 강사 / 학생 권한별 접근 제어 및 세션 관리를 최적화했습니다.
-
-**2. 실시간 코드 동기화 구조 설계**
-WebSocket / STOMP를 활용해 강사-학생 간 양방향 코드 동기화 데이터 흐름과 상태 관리 구조를 설계했습니다.
+[front-end 바로가기](https://github.com/sooxpak/sooscode_front)
